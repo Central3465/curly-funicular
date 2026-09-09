@@ -3,6 +3,8 @@ import string
 from .decoder import get_random_byte, should_add_decoy
 
 letters = list(string.ascii_lowercase)
+# Create lookup table for O(1) index access instead of O(n) search
+letter_to_index = {letter: i for i, letter in enumerate(letters)}
 
 
 def create_random_cipher():
@@ -21,24 +23,24 @@ def create_decoy(key, position):
 
 
 def encode_message(message, cipher, key):
-    encrypted_message = ""
-
+    encrypted_chars = []
+    
     for position, character in enumerate(message):
-
-        if character.lower() in letters:
-            index = letters.index(character.lower())
+        char_lower = character.lower()
+        
+        if char_lower in letter_to_index:
+            index = letter_to_index[char_lower]
             encrypted = cipher[index]
 
             if character.isupper():
                 encrypted = encrypted.upper()
 
-            encrypted_message += encrypted
-
+            encrypted_chars.append(encrypted)
         else:
-            encrypted_message += character
+            encrypted_chars.append(character)
 
         if should_add_decoy(key, position):
             decoy = create_decoy(key, position)
-            encrypted_message += decoy
+            encrypted_chars.append(decoy)
 
-    return encrypted_message
+    return ''.join(encrypted_chars)

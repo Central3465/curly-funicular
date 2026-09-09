@@ -2,6 +2,8 @@ import string
 import hashlib
 
 letters = list(string.ascii_lowercase)
+# Create set for O(1) membership testing instead of O(n) list search
+letters_set = set(letters)
 
 
 def get_random_byte(key, position, extra=""):
@@ -25,32 +27,29 @@ def create_decipher(cipher):
 
 def decode_message(coded_message, cipher, key):
     decipher = create_decipher(cipher)
-    decoded_message = ""
+    decoded_chars = []
     position = 0
     index = 0
+    len_coded = len(coded_message)
 
-    while index < len(coded_message):
+    while index < len_coded:
         has_decoy = should_add_decoy(key, position)
-
-        if index >= len(coded_message):
-            break
 
         character = coded_message[index]
 
         if character in decipher:
-            decoded_message += decipher[character]
+            decoded_chars.append(decipher[character])
         else:
-            decoded_message += character
+            decoded_chars.append(character)
 
         index += 1
 
-        if has_decoy:
-            if index < len(coded_message):
-                index += 1
+        if has_decoy and index < len_coded:
+            index += 1
 
         position += 1
 
-    return decoded_message
+    return ''.join(decoded_chars)
 
 
 def validate_cipher(cipher_input):
@@ -66,7 +65,7 @@ def validate_cipher(cipher_input):
         if any(
             not isinstance(letter, str)
             or len(letter) != 1
-            or letter.lower() not in letters
+            or letter.lower() not in letters_set
             for letter in cipher
         ):
             return False, "All items must be single letters"
