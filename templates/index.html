@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cypher Encoder & Decoder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Cypher Encoder & Decoder</h1>
+            <p class="subtitle">Encrypt and decrypt messages with your custom cipher and secret key</p>
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-encoder" onclick="switchMode('encoder')">📝 Encoder</button>
+                <button class="tab-btn" id="tab-decoder" onclick="switchMode('decoder')">🔍 Decoder</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Encoder -->
+            <div class="section encoder-setup-section" id="encoder-setup-section">
+                <h2>Setup Encoder</h2>
+
+                <div class="form-group">
+                    <label for="encoder-key-input">Secret Key:</label>
+                    <input
+                        type="text"
+                        id="encoder-key-input"
+                        placeholder="Enter your secret key"
+                        class="input-field"
+                    >
+                </div>
+
+                <button id="generate-cipher-btn" class="btn btn-secondary">Generate Random Cipher</button>
+
+                <div id="generate-result" class="result-container" style="display: none;">
+                    <div class="result-label">Generated Cipher:</div>
+                    <div id="generated-cipher" class="decoded-output"></div>
+                    <button id="copy-cipher-btn" class="btn btn-secondary">Copy Cipher</button>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="encoder-cipher-input">Or Enter Existing Cipher (26 unique letters):</label>
+                    <input
+                        type="text"
+                        id="encoder-cipher-input"
+                        placeholder="e.g., ['b','c','d',...] or [a-z as permutation]"
+                        class="input-field"
+                    >
+                </div>
+
+                <button id="encoder-setup-btn" class="btn btn-primary">Start Encoding</button>
+            </div>
+
+            <!-- Encoder Section -->
+            <div class="section encoder-section" id="encoder-section" style="display: none;">
+                <h2>Setup Encoder</h2>
+
+                <div class="form-group">
+                    <label for="plain-message-input">Message to Encrypt:</label>
+                    <textarea
+                        id="plain-message-input"
+                        class="input-field textarea-field"
+                        placeholder="Enter your plain message here..."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <button id="encode-btn" class="btn btn-primary">Encode Message</button>
+
+                <div id="encode-result" class="result-container" style="display: none;">
+                    <div class="result-label">Encrypted Message:</div>
+                    <div id="encrypted-output" class="decoded-output"></div>
+                    <button id="copy-encrypted-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                </div>
+
+                <button id="encoder-reset-btn" class="btn btn-secondary">Reset Setup</button>
+            </div>
+
+            <!-- Setup Section (for decoder) -->
+            <div class="section setup-section" id="setup-section" style="display: none;">
+                <h2>Setup Decoder</h2>
+
+                <div class="form-group">
+                    <label for="cipher-input">Cipher (26 unique letters):</label>
+                    <input
+                        type="text"
+                        id="cipher-input"
+                        placeholder="e.g., ['b','c','d',...] or [a-z as permutation]"
+                        class="input-field"
+                    >
+                    <div id="cipher-validation" class="validation-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="key-input">Secret Key:</label>
+                    <input
+                        type="text"
+                        id="key-input"
+                        placeholder="Enter your secret key"
+                        class="input-field"
+                    >
+                </div>
+
+                <button id="setup-btn" class="btn btn-primary">Set Up Decoder</button>
+            </div>
+
+            <!-- Decoder Section -->
+            <div class="section decoder-section" id="decoder-section" style="display: none;" class="hidden-mode">
+                <h2>Decode Message</h2>
+
+                <div class="form-group">
+                    <label for="message-input">Encrypted Message:</label>
+                    <textarea
+                        id="message-input"
+                        class="input-field textarea-field"
+                        placeholder="Paste your encrypted message here..."
+                        rows="4"
+                    ></textarea>
+                </div>
+
+                <button id="decode-btn" class="btn btn-primary">Decode Message</button>
+
+                <div id="decode-result" class="result-container" style="display: none;">
+                    <div class="result-label">Decoded Message:</div>
+                    <div id="decoded-output" class="decoded-output"></div>
+                    <button id="copy-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                </div>
+
+                <button id="reset-btn" class="btn btn-secondary">Reset Setup</button>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+        </div>
+
+        <br>
+
+        <div class="main-content">
+            <footer>
+                <p>Source code is available on <a href="https://github.com/Central3465/curly-funicular" target="_blank">GitHub</a>.</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        let currentEncoderCipher = null;
+        let currentEncoderKey = null;
+        let currentDecoderCipher = null;
+        let currentDecoderKey = null;
+        let currentMode = 'encoder';
+
+        // Mode switching
+        function switchMode(mode) {
+            currentMode = mode;
+            const tabEncoder = document.getElementById('tab-encoder');
+            const tabDecoder = document.getElementById('tab-decoder');
+
+            if (mode === 'encoder') {
+                tabEncoder.classList.add('active');
+                tabDecoder.classList.remove('active');
+                document.getElementById('encoder-setup-section').style.display = 'block';
+                document.getElementById('encoder-section').style.display = 'none';
+                document.getElementById('setup-section').style.display = 'none';
+                document.getElementById('decoder-section').style.display = 'none';
+                clearMessages();
+            } else {
+                tabDecoder.classList.add('active');
+                tabEncoder.classList.remove('active');
+                document.getElementById('encoder-setup-section').style.display = 'none';
+                document.getElementById('encoder-section').style.display = 'none';
+                document.getElementById('setup-section').style.display = 'block';
+                document.getElementById('decoder-section').style.display = 'none';
+                clearMessages();
+            }
+        }
+
+        // ===== ENCODER FUNCTIONS =====
+
+        // Generate random cipher
+        document.getElementById('generate-cipher-btn').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/api/generate-cipher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('generated-cipher').textContent = JSON.stringify(data.cipher);
+                    document.getElementById('generate-result').style.display = 'block';
+                    showSuccess('Cipher generated successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error generating cipher: ' + error.message);
+            }
+        });
+
+        // Copy generated cipher
+        document.getElementById('copy-cipher-btn').addEventListener('click', function() {
+            const text = document.getElementById('generated-cipher').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Cipher copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
+        });
+
+        // Setup encoder
+        document.getElementById('encoder-setup-btn').addEventListener('click', async function() {
+            const cipherInput = document.getElementById('encoder-cipher-input').value;
+            const keyInput = document.getElementById('encoder-key-input').value;
+
+            if (!keyInput.trim()) {
+                showError('Key cannot be empty');
+                return;
+            }
+
+            if (!cipherInput.trim()) {
+                showError('Please enter or generate a cipher');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/validate-cipher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cipher: cipherInput })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    currentEncoderCipher = data.cipher;
+                    currentEncoderKey = keyInput;
+
+                    document.getElementById('encoder-setup-section').style.display = 'none';
+                    document.getElementById('encoder-section').style.display = 'block';
+                    showSuccess('Encoder ready! Start encrypting messages.');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error validating cipher: ' + error.message);
+            }
+        });
+
+        // Encode message
+        document.getElementById('encode-btn').addEventListener('click', async function() {
+            const message = document.getElementById('plain-message-input').value;
+
+            if (!message.trim()) {
+                showError('Please enter a message to encrypt');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/encode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cipher: currentEncoderCipher,
+                        message: message,
+                        key: currentEncoderKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('encrypted-output').textContent = data.encrypted;
+                    document.getElementById('encode-result').style.display = 'block';
+                    showSuccess('Message encoded successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error encoding message: ' + error.message);
+            }
+        });
+
+        // Copy encrypted message
+        document.getElementById('copy-encrypted-btn').addEventListener('click', function() {
+            const text = document.getElementById('encrypted-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
+        });
+
+        // Reset encoder
+        document.getElementById('encoder-reset-btn').addEventListener('click', function() {
+            currentEncoderCipher = null;
+            currentEncoderKey = null;
+            document.getElementById('encoder-cipher-input').value = '';
+            document.getElementById('encoder-key-input').value = '';
+            document.getElementById('plain-message-input').value = '';
+            document.getElementById('encode-result').style.display = 'none';
+            document.getElementById('encoder-setup-section').style.display = 'block';
+            document.getElementById('encoder-section').style.display = 'none';
+            clearMessages();
+        });
+
+        // ===== DECODER FUNCTIONS =====
+
+        // Setup decoder
+        document.getElementById('setup-btn').addEventListener('click', async function() {
+            const cipherInput = document.getElementById('cipher-input').value;
+            const keyInput = document.getElementById('key-input').value;
+
+            if (!keyInput.trim()) {
+                showError('Key cannot be empty');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/validate-cipher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cipher: cipherInput })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    currentDecoderCipher = data.cipher;
+                    currentDecoderKey = keyInput;
+
+                    document.getElementById('setup-section').style.display = 'none';
+                    document.getElementById('decoder-section').style.display = 'block';
+                    showSuccess('Decoder ready! Start decrypting messages.');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error validating cipher: ' + error.message);
+            }
+        });
+
+        // Decode message
+        document.getElementById('decode-btn').addEventListener('click', async function() {
+            const message = document.getElementById('message-input').value;
+
+            if (!message.trim()) {
+                showError('Please enter an encrypted message');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/decode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cipher: currentDecoderCipher,
+                        message: message,
+                        key: currentDecoderKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('decoded-output').textContent = data.decoded;
+                    document.getElementById('decode-result').style.display = 'block';
+                    showSuccess('Message decoded successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error decoding message: ' + error.message);
+            }
+        });
+
+        // Copy decoded message
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            const text = document.getElementById('decoded-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
+        });
+
+        // Reset decoder
+        document.getElementById('reset-btn').addEventListener('click', function() {
+            currentDecoderCipher = null;
+            currentDecoderKey = null;
+            document.getElementById('cipher-input').value = '';
+            document.getElementById('key-input').value = '';
+            document.getElementById('message-input').value = '';
+            document.getElementById('decode-result').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'block';
+            document.getElementById('decoder-section').style.display = 'none';
+            clearMessages();
+        });
+
+        // Message utilities
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => successDiv.style.display = 'none', 5000);
+        }
+
+        function clearMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
