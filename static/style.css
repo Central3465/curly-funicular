@@ -415,6 +415,26 @@ label {
     font-size: 0.9rem;
 }
 
+.access-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.email-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.email-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .header h1 {
