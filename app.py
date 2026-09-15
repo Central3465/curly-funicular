@@ -4,17 +4,25 @@ import os
 from dotenv import load_dotenv
 from functools import wraps
 from datetime import datetime, timedelta
+import requests
+import re
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 PASSWORD = os.getenv('PASSWORD', '')
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', '')
 
 # Rate limiting for password attempts
 failed_attempts = {}
 MAX_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(hours=24)
+
+# Rate limiting for access requests
+access_requests = {}
+ACCESS_REQUEST_LIMIT = 1
+ACCESS_REQUEST_WINDOW = timedelta(minutes=1)
 
 
 def get_client_ip():
@@ -70,6 +78,34 @@ def clear_failed_attempts(ip):
         del failed_attempts[ip]
 
 
+def can_make_access_request(ip):
+    if ip not in access_requests:
+        return True, None
+
+    last_request_time = access_requests[ip]
+    time_since_last_request = datetime.now() - last_request_time
+
+    if time_since_last_request < ACCESS_REQUEST_WINDOW:
+        wait_time = int((ACCESS_REQUEST_WINDOW - time_since_last_request).total_seconds())
+        return False, wait_time
+    else:
+        del access_requests[ip]
+        return True, None
+
+
+def record_access_request(ip):
+    access_requests[ip] = datetime.now()
+
+
+def validate_email(email):
+    if not email or len(email) > 254:
+        return False
+    if not email.endswith('@bai.studio'):
+        return False
+    pattern = r'^[a-zA-Z0-9._%+-]+@bai\.studio$'
+    return bool(re.match(pattern, email))
+
+
 def require_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -82,6 +118,11 @@ def require_auth(f):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/request-access')
+def request_access():
+    return render_template('request-access.html')
 
 
 @app.route('/api/check-password', methods=['POST'])
@@ -189,6 +230,84 @@ def encode_endpoint():
         return jsonify({'encrypted': encrypted})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/request-access', methods=['POST'])
+def request_access_endpoint():
+    client_ip = get_client_ip()
+
+    # Rate limiting check
+    can_request, wait_time = can_make_access_request(client_ip)
+    if not can_request:
+        return jsonify({
+            'error': f'You can only submit one access request every 5 minutes. Please try again in {wait_time} seconds.'
+        }), 429
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    description = data.get('description', '').strip()
+
+    # Validate input
+    if not name or len(name) > 100:
+        return jsonify({'error': 'Invalid name'}), 400
+
+    if not email or len(email) > 254:
+        return jsonify({'error': 'Invalid email'}), 400
+
+    if not validate_email(email):
+        return jsonify({'error': 'Email must be from the bai.studio domain'}), 400
+
+    if not description or len(description) < 10 or len(description) > 1000:
+        return jsonify({'error': 'Description must be between 10 and 1000 characters'}), 400
+
+    # Record the request for rate limiting
+    record_access_request(client_ip)
+
+    # Send to Discord webhook
+    try:
+        embed = {
+            'title': '🔐 New Access Request',
+            'description': description,
+            'color': 4294144,
+            'fields': [
+                {
+                    'name': 'Name',
+                    'value': name,
+                    'inline': False
+                },
+                {
+                    'name': 'Email',
+                    'value': email,
+                    'inline': False
+                },
+                {
+                    'name': 'Submitted At',
+                    'value': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
+                    'inline': False
+                }
+            ]
+        }
+
+        payload = {
+            'embeds': [embed]
+        }
+
+        response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+
+        if response.status_code != 204:
+            return jsonify({'error': 'Failed to send request. Please try again later.'}), 500
+
+        return jsonify({'success': True, 'message': 'Access request submitted successfully'}), 200
+
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'Failed to send request. Please try again later.'}), 500
+    except Exception as e:
+        return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
 if __name__ == '__main__':

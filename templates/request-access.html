@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Request Access - Cypher Encoder & Decoder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .request-access-container {
+            max-width: 500px;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .request-access-container h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .request-access-container .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            opacity: 0.8;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            background: rgba(211, 47, 47, 0.1);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .success-message {
+            color: #388e3c;
+            background: rgba(56, 142, 60, 0.1);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #388e3c;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="request-access-container">
+        <h1>Request Access</h1>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;"></div>
+
+        <form id="request-access-form" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    maxlength="100"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    maxlength="254"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description">Why do you need access? *</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    required
+                    maxlength="1000"
+                    placeholder="Please explain your reason for requesting access (e.g., security research, educational purposes, etc.)"
+                ></textarea>
+                <div class="field-hint"><span id="char-count">0</span>/1000 characters</div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-primary" id="submit-btn">Send Request</button>
+            </div>
+        </form>
+
+        <div class="back-link">
+            <a href="/">← Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('request-access-form');
+        const errorDiv = document.getElementById('error-message');
+        const successDiv = document.getElementById('success-message');
+        const submitBtn = document.getElementById('submit-btn');
+        const descriptionField = document.getElementById('description');
+        const charCount = document.getElementById('char-count');
+
+        descriptionField.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const description = document.getElementById('description').value.trim();
+
+            // Client-side validation
+            if (!name) {
+                showError('Please enter your full name.');
+                return;
+            }
+
+            if (!email) {
+                showError('Please enter your email address.');
+                return;
+            }
+
+            if (!email.endsWith('@bai.studio')) {
+                showError('Unrecognised email domain. Please use your official email address. Avoid personal email addresses.');
+                return;
+            }
+
+            if (!description) {
+                showError('Please explain why you need access.');
+                return;
+            }
+
+            if (description.length < 10) {
+                showError('Description must be at least 10 characters.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            try {
+                const response = await fetch('/api/request-access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('Access request sent successfully! We will review your request shortly.');
+                    form.reset();
+                    charCount.textContent = '0';
+                } else {
+                    showError(data.error || 'Failed to send request. Please try again later.');
+                }
+            } catch (error) {
+                showError('An error occurred: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Request';
+            }
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function showSuccess(message) {
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
