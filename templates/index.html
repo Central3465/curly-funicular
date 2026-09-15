@@ -3,10 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>Cypher Encoder & Decoder</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <div id="auth-warning-banner" class="auth-warning-banner" style="display: none;">
+        <div class="warning-content">
+            <span class="warning-icon">⚠️</span>
+            <span class="warning-text">You are not authenticated. Please reload the page and enter the password to use this application.</span>
+        </div>
+    </div>
+
+    <div id="password-lock-overlay" class="password-lock-overlay">
+        <div class="password-lock-container">
+            <h2>🔐 Access Restricted</h2>
+            <p class="lock-description">This website is password protected. Please enter the password to continue. Using inspect element to remove this overlay will not work.</p>
+            <div class="form-group">
+                <input
+                    type="password"
+                    id="password-input"
+                    placeholder="Enter password"
+                    class="input-field"
+                    autocomplete="off"
+                >
+            </div>
+            <button id="unlock-btn" class="btn btn-primary">Log in</button>
+            <div id="password-error" class="error-message" style="display: none; margin-top: 10px;"></div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>🔐 Cypher Encoder & Decoder</h1>
@@ -18,7 +44,6 @@
         </div>
 
         <div class="main-content">
-            <!-- Encoder -->
             <div class="section encoder-setup-section" id="encoder-setup-section">
                 <h2>Setup Encoder</h2>
 
@@ -53,7 +78,6 @@
                 <button id="encoder-setup-btn" class="btn btn-primary">Start Encoding</button>
             </div>
 
-            <!-- Encoder Section -->
             <div class="section encoder-section" id="encoder-section" style="display: none;">
                 <h2>Setup Encoder</h2>
 
@@ -78,7 +102,6 @@
                 <button id="encoder-reset-btn" class="btn btn-secondary">Reset Setup</button>
             </div>
 
-            <!-- Setup Section (for decoder) -->
             <div class="section setup-section" id="setup-section" style="display: none;">
                 <h2>Setup Decoder</h2>
 
@@ -106,7 +129,6 @@
                 <button id="setup-btn" class="btn btn-primary">Set Up Decoder</button>
             </div>
 
-            <!-- Decoder Section -->
             <div class="section decoder-section" id="decoder-section" style="display: none;" class="hidden-mode">
                 <h2>Decode Message</h2>
 
@@ -131,28 +153,80 @@
                 <button id="reset-btn" class="btn btn-secondary">Reset Setup</button>
             </div>
 
-            <!-- Status Messages -->
             <div id="error-message" class="error-message" style="display: none;"></div>
             <div id="success-message" class="success-message" style="display: none;"></div>
-        </div>
-
-        <br>
-
-        <div class="main-content">
-            <footer>
-                <p>Thanks to Hanlin Bai & Adam</p>
-            </footer>
         </div>
     </div>
 
     <script>
+        function showAuthWarning() {
+            const warningBanner = document.getElementById('auth-warning-banner');
+            warningBanner.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideAuthWarning() {
+            const warningBanner = document.getElementById('auth-warning-banner');
+            warningBanner.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        document.body.style.overflow = 'hidden';
+
+        document.getElementById('unlock-btn').addEventListener('click', async function() {
+            const passwordInput = document.getElementById('password-input').value;
+            const errorDiv = document.getElementById('password-error');
+            const unlockBtn = document.getElementById('unlock-btn');
+            errorDiv.style.display = 'none';
+
+            if (!passwordInput) {
+                errorDiv.textContent = 'Please enter a password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/check-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: passwordInput })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 429) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                    document.getElementById('password-input').disabled = true;
+                    unlockBtn.disabled = true;
+                    unlockBtn.textContent = 'Temporarily Blocked';
+                } else if (data.valid) {
+                    document.getElementById('password-lock-overlay').style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    hideAuthWarning();
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid password.';
+                    errorDiv.style.display = 'block';
+                    document.getElementById('password-input').value = '';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error verifying password: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('password-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('unlock-btn').click();
+            }
+        });
+
         let currentEncoderCipher = null;
         let currentEncoderKey = null;
         let currentDecoderCipher = null;
         let currentDecoderKey = null;
         let currentMode = 'encoder';
 
-        // Mode switching
         function switchMode(mode) {
             currentMode = mode;
             const tabEncoder = document.getElementById('tab-encoder');
@@ -177,15 +251,18 @@
             }
         }
 
-        // ===== ENCODER FUNCTIONS =====
-
-        // Generate random cipher
         document.getElementById('generate-cipher-btn').addEventListener('click', async function() {
             try {
                 const response = await fetch('/api/generate-cipher', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
 
                 const data = await response.json();
 
@@ -201,7 +278,6 @@
             }
         });
 
-        // Copy generated cipher
         document.getElementById('copy-cipher-btn').addEventListener('click', function() {
             const text = document.getElementById('generated-cipher').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -211,7 +287,6 @@
             });
         });
 
-        // Setup encoder
         document.getElementById('encoder-setup-btn').addEventListener('click', async function() {
             const cipherInput = document.getElementById('encoder-cipher-input').value;
             const keyInput = document.getElementById('encoder-key-input').value;
@@ -233,6 +308,12 @@
                     body: JSON.stringify({ cipher: cipherInput })
                 });
 
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (data.valid) {
@@ -250,7 +331,6 @@
             }
         });
 
-        // Encode message
         document.getElementById('encode-btn').addEventListener('click', async function() {
             const message = document.getElementById('plain-message-input').value;
 
@@ -270,6 +350,12 @@
                     })
                 });
 
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (response.ok) {
@@ -284,7 +370,6 @@
             }
         });
 
-        // Copy encrypted message
         document.getElementById('copy-encrypted-btn').addEventListener('click', function() {
             const text = document.getElementById('encrypted-output').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -294,7 +379,6 @@
             });
         });
 
-        // Reset encoder
         document.getElementById('encoder-reset-btn').addEventListener('click', function() {
             currentEncoderCipher = null;
             currentEncoderKey = null;
@@ -307,9 +391,6 @@
             clearMessages();
         });
 
-        // ===== DECODER FUNCTIONS =====
-
-        // Setup decoder
         document.getElementById('setup-btn').addEventListener('click', async function() {
             const cipherInput = document.getElementById('cipher-input').value;
             const keyInput = document.getElementById('key-input').value;
@@ -325,6 +406,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cipher: cipherInput })
                 });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
 
                 const data = await response.json();
 
@@ -343,7 +430,6 @@
             }
         });
 
-        // Decode message
         document.getElementById('decode-btn').addEventListener('click', async function() {
             const message = document.getElementById('message-input').value;
 
@@ -363,6 +449,12 @@
                     })
                 });
 
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (response.ok) {
@@ -377,7 +469,6 @@
             }
         });
 
-        // Copy decoded message
         document.getElementById('copy-btn').addEventListener('click', function() {
             const text = document.getElementById('decoded-output').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -387,7 +478,6 @@
             });
         });
 
-        // Reset decoder
         document.getElementById('reset-btn').addEventListener('click', function() {
             currentDecoderCipher = null;
             currentDecoderKey = null;
@@ -400,7 +490,6 @@
             clearMessages();
         });
 
-        // Message utilities
         function showError(message) {
             const errorDiv = document.getElementById('error-message');
             errorDiv.textContent = message;
