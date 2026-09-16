@@ -186,6 +186,17 @@ v3.0 (GPL-3.0).
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+For detailed contribution guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### AI Use Disclosure
+
+**Important:** If you use AI tools (such as large language models, code generation tools, or automated assistants) to help write code, documentation, or other contributions, you **must disclose this** when submitting your contribution. AI-assisted work should not be presented as purely human-written. This transparency helps maintain trust and accountability in our project community.
+
+When submitting a pull request that includes AI-generated content:
+- Clearly indicate which parts were AI-assisted
+- Verify and test all AI-generated code before submission
+- Take responsibility for understanding and maintaining any AI-assisted contributions
+
 ## Acknowledgments
 
 - Built with [Flask](https://flask.palletsprojects.com/)
