@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Login - Cipher App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        .error-message {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .auth-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        .auth-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2>🔐 Login</h2>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <div class="form-group">
+            <label for="email-input">Email:</label>
+            <input type="email" id="email-input" class="input-field" placeholder="Enter your email" autocomplete="email">
+        </div>
+        
+        <div class="form-group">
+            <label for="password-input">Password:</label>
+            <input type="password" id="password-input" class="input-field" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        
+        <button id="login-btn" class="btn btn-primary">Log In</button>
+        
+        <div class="auth-link">
+            Don't have an account? <a href="/register">Register here</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-btn').addEventListener('click', async function() {
+            const email = document.getElementById('email-input').value.trim().toLowerCase();
+            const password = document.getElementById('password-input').value;
+            const errorDiv = document.getElementById('error-message');
+            const loginBtn = document.getElementById('login-btn');
+            
+            errorDiv.style.display = 'none';
+            
+            if (!email) {
+                errorDiv.textContent = 'Please enter your email';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!password) {
+                errorDiv.textContent = 'Please enter your password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                    if (response.status !== 429) {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Log In';
+                    }
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.style.display = 'block';
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Log In';
+            }
+        });
+        
+        document.getElementById('email-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('password-input').focus();
+        });
+        
+        document.getElementById('password-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('login-btn').click();
+        });
+    </script>
+</body>
+</html>
