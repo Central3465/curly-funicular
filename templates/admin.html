@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Admin Dashboard - Cipher App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .admin-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .nav-header a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .users-table th, .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .users-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+        }
+        .users-table tr:hover {
+            background: var(--bg-primary);
+        }
+        .status-active {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-banned {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .error-message {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .ban-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .ban-modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .ban-modal-content h3 {
+            margin-bottom: 20px;
+        }
+        .ban-modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 20px;
+        }
+        .ban-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .admin-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="nav-header">
+            <h2>🛡️ Admin Dashboard</h2>
+            <div>
+                <a href="/">← Back to App</a>
+                <span style="margin: 0 10px;">|</span>
+                <a href="/settings">Settings</a>
+            </div>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <div id="loading" class="loading">Loading users...</div>
+        
+        <table id="users-table" class="users-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-tbody">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="ban-modal" class="ban-modal">
+        <div class="ban-modal-content">
+            <h3>Ban User</h3>
+            <p>Enter a reason for banning this user:</p>
+            <textarea id="ban-reason" placeholder="Reason for ban..."></textarea>
+            <div class="ban-modal-actions">
+                <button id="cancel-ban-btn" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-ban-btn" class="btn btn-danger">Ban User</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserToBan = null;
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                if (response.status === 403) {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = 'Access denied. Admin privileges required.';
+                    errorDiv.style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('users-table').style.display = 'table';
+                
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = '';
+                
+                data.users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    
+                    const emailTd = document.createElement('td');
+                    emailTd.textContent = user.email;
+                    if (user.email === 'test@test.com') {
+                        emailTd.innerHTML += ' <span class="admin-badge">ADMIN</span>';
+                    }
+                    
+                    const createdTd = document.createElement('td');
+                    createdTd.textContent = user.created_at || 'Unknown';
+                    
+                    const statusTd = document.createElement('td');
+                    statusTd.innerHTML = user.banned 
+                        ? '<span class="status-banned">Banned ⚠️</span>' 
+                        : '<span class="status-active">Active ✓</span>';
+                    
+                    const actionsTd = document.createElement('td');
+                    if (user.email !== 'test@test.com') {
+                        if (user.banned) {
+                            const unbanBtn = document.createElement('button');
+                            unbanBtn.className = 'btn btn-success';
+                            unbanBtn.textContent = 'Unban';
+                            unbanBtn.onclick = () => unbanUser(user._id);
+                            actionsTd.appendChild(unbanBtn);
+                        } else {
+                            const banBtn = document.createElement('button');
+                            banBtn.className = 'btn btn-danger';
+                            banBtn.textContent = 'Ban';
+                            banBtn.onclick = () => openBanModal(user._id);
+                            actionsTd.appendChild(banBtn);
+                        }
+                    }
+                    
+                    tr.appendChild(emailTd);
+                    tr.appendChild(createdTd);
+                    tr.appendChild(statusTd);
+                    tr.appendChild(actionsTd);
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error loading users: ' + error.message;
+                errorDiv.style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function openBanModal(userId) {
+            currentUserToBan = userId;
+            document.getElementById('ban-reason').value = '';
+            document.getElementById('ban-modal').style.display = 'flex';
+        }
+
+        function closeBanModal() {
+            document.getElementById('ban-modal').style.display = 'none';
+            currentUserToBan = null;
+        }
+
+        async function confirmBan() {
+            const reason = document.getElementById('ban-reason').value.trim();
+            
+            try {
+                const response = await fetch('/api/admin/ban-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserToBan, reason })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    closeBanModal();
+                    loadUsers();
+                } else {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error banning user: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function unbanUser(userId) {
+            try {
+                const response = await fetch('/api/admin/unban-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    loadUsers();
+                } else {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error unbanning user: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        document.getElementById('cancel-ban-btn').addEventListener('click', closeBanModal);
+        document.getElementById('confirm-ban-btn').addEventListener('click', confirmBan);
+        
+        // Close modal when clicking outside
+        document.getElementById('ban-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeBanModal();
+        });
+
+        loadUsers();
+    </script>
+</body>
+</html>
