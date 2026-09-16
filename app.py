@@ -12,7 +12,6 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 PASSWORD = os.getenv('PASSWORD', '')
-DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL', '')
 
 # Rate limiting for password attempts
 failed_attempts = {}
@@ -119,6 +118,9 @@ def require_auth(f):
 def index():
     return render_template('index.html')
 
+@app.route('/credits')
+def credits():
+    return render_template('credits.html')
 
 @app.route('/version')
 def request_access():
@@ -230,85 +232,6 @@ def encode_endpoint():
         return jsonify({'encrypted': encrypted})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/request-access', methods=['POST'])
-def request_access_endpoint():
-    client_ip = get_client_ip()
-
-    # Rate limiting check
-    can_request, wait_time = can_make_access_request(client_ip)
-    if not can_request:
-        return jsonify({
-            'error': f'You can only submit one access request every 5 minutes. Please try again in {wait_time} seconds.'
-        }), 429
-
-    data = request.get_json()
-
-    if not data:
-        return jsonify({'error': 'Invalid request'}), 400
-
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip()
-    description = data.get('description', '').strip()
-
-    # Validate input
-    if not name or len(name) > 100:
-        return jsonify({'error': 'Invalid name'}), 400
-
-    if not email or len(email) > 254:
-        return jsonify({'error': 'Invalid email'}), 400
-
-    if not validate_email(email):
-        return jsonify({'error': 'Email must be from the bai.studio domain'}), 400
-
-    if not description or len(description) < 10 or len(description) > 1000:
-        return jsonify({'error': 'Description must be between 10 and 1000 characters'}), 400
-
-    # Record the request for rate limiting
-    record_access_request(client_ip)
-
-    # Send to Discord webhook
-    try:
-        embed = {
-            'title': '🔐 New Access Request',
-            'description': description,
-            'color': 4294144,
-            'fields': [
-                {
-                    'name': 'Name',
-                    'value': name,
-                    'inline': False
-                },
-                {
-                    'name': 'Email',
-                    'value': email,
-                    'inline': False
-                },
-                {
-                    'name': 'Submitted At',
-                    'value': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'),
-                    'inline': False
-                }
-            ]
-        }
-
-        payload = {
-            'embeds': [embed]
-        }
-
-        response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
-
-        if response.status_code != 204:
-            return jsonify({'error': 'Failed to send request. Please try again later.'}), 500
-
-        return jsonify({'success': True, 'message': 'Access request submitted successfully'}), 200
-
-    except requests.exceptions.RequestException:
-        return jsonify({'error': 'Failed to send request. Please try again later.'}), 500
-    except Exception as e:
-        return jsonify({'error': 'An unexpected error occurred'}), 500
-
 
 @app.route('/api/convert-base', methods=['POST'])
 @require_auth
