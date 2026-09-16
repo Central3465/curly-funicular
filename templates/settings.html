@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Account Settings - Cipher App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .settings-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .settings-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .user-info {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .user-info p {
+            margin: 10px 0;
+        }
+        .user-info strong {
+            color: var(--primary-color);
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .error-message {
+            background: #dc3545;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .success-message {
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .nav-header a {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .nav-header a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="nav-header">
+            <h2>⚙️ Account Settings</h2>
+            <a href="/">← Back to App</a>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        <div id="success-message" class="success-message"></div>
+        
+        <div id="loading" class="loading">Loading your account information...</div>
+        
+        <div id="user-info-section" style="display: none;">
+            <div class="user-info">
+                <p><strong>Email:</strong> <span id="user-email"></span></p>
+                <p><strong>Account Created:</strong> <span id="user-created-at"></span></p>
+                <p><strong>Status:</strong> <span id="user-status"></span></p>
+            </div>
+            
+            <button id="logout-btn" class="btn btn-danger">Log Out</button>
+            <button id="back-to-app-btn" class="btn btn-primary">Back to App</button>
+        </div>
+    </div>
+
+    <script>
+        async function loadUserData() {
+            try {
+                const response = await fetch('/api/user-data');
+                
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('user-info-section').style.display = 'block';
+                document.getElementById('user-email').textContent = data.email;
+                document.getElementById('user-created-at').textContent = data.created_at;
+                
+                const statusSpan = document.getElementById('user-status');
+                if (data.banned) {
+                    statusSpan.textContent = 'Banned ⚠️';
+                    statusSpan.style.color = '#dc3545';
+                } else {
+                    statusSpan.textContent = 'Active ✓';
+                    statusSpan.style.color = '#28a745';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error loading user data: ' + error.message;
+                errorDiv.style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        document.getElementById('logout-btn').addEventListener('click', async function() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error logging out: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        document.getElementById('back-to-app-btn').addEventListener('click', function() {
+            window.location.href = '/';
+        });
+        
+        // Load user data on page load
+        loadUserData();
+    </script>
+</body>
+</html>

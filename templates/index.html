@@ -6,34 +6,70 @@
     <meta name="color-scheme" content="light dark">
     <title>Cypher Encoder & Decoder</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .user-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .user-nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            margin-left: 15px;
+        }
+        .user-nav a:hover {
+            text-decoration: underline;
+        }
+        .user-email {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
 </head>
 <body>
+    {% if logged_in %}
+    <div class="user-nav">
+        <span class="user-email">👤 {{ session.get('email', 'User') }}</span>
+        <div>
+            <a href="/settings">⚙️ Settings</a>
+            {% if session.get('email') == 'test@test.com' %}
+            <a href="/admin">🛡️ Admin</a>
+            {% endif %}
+            <a href="#" onclick="logout(); return false;">🚪 Logout</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="user-nav">
+        <span></span>
+        <div>
+            <a href="/login">🔐 Login</a>
+            <a href="/register">📝 Register</a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not logged_in %}
+    <div id="password-lock-overlay" class="password-lock-overlay" style="display: flex;">
+        <div class="password-lock-container">
+            <h2>🔐 Access Restricted</h2>
+            <p class="lock-description">This website requires an account to use. Please log in or register to continue.</p>
+            <button onclick="window.location.href='/login'" class="btn btn-primary">Log In</button>
+            <button onclick="window.location.href='/register'" class="btn btn-secondary" style="margin-top: 10px;">Register</button>
+        </div>
+    </div>
+    {% endif %}
+
     <div id="auth-warning-banner" class="auth-warning-banner" style="display: none;">
         <div class="warning-content">
             <span class="warning-icon">⚠️</span>
-            <span class="warning-text">You are not authenticated. Please reload the page and enter the password to use this application.</span>
+            <span class="warning-text">You are not authenticated. Please log in to use this application.</span>
         </div>
     </div>
 
-    <div id="password-lock-overlay" class="password-lock-overlay">
-        <div class="password-lock-container">
-            <h2>🔐 Access Restricted</h2>
-            <p class="lock-description">This website is password protected. Please enter the password to continue. Using inspect element to remove this overlay will not work.</p>
-            <div class="form-group">
-                <input
-                    type="password"
-                    id="password-input"
-                    placeholder="Enter password"
-                    class="input-field"
-                    autocomplete="off"
-                >
-            </div>
-            <button id="unlock-btn" class="btn btn-primary">Log in</button>
-            <div id="password-error" class="error-message" style="display: none; margin-top: 10px;"></div>
-        </div>
-    </div>
-
-    <div class="container">
+    <div class="container" style="{% if not logged_in %}filter: blur(5px); pointer-events: none;{% endif %}">
         <div class="header">
             <h1>🔐 Cypher Encoder & Decoder</h1>
             <p class="subtitle">Encrypt and decrypt messages with your custom cipher and secret key</p>
@@ -284,67 +320,24 @@
     </div>
 
     <script>
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
         function showAuthWarning() {
             const warningBanner = document.getElementById('auth-warning-banner');
             warningBanner.style.display = 'block';
-            document.body.style.overflow = 'hidden';
         }
 
         function hideAuthWarning() {
             const warningBanner = document.getElementById('auth-warning-banner');
             warningBanner.style.display = 'none';
-            document.body.style.overflow = 'auto';
         }
-
-        document.body.style.overflow = 'hidden';
-
-        document.getElementById('unlock-btn').addEventListener('click', async function() {
-            const passwordInput = document.getElementById('password-input').value;
-            const errorDiv = document.getElementById('password-error');
-            const unlockBtn = document.getElementById('unlock-btn');
-            errorDiv.style.display = 'none';
-
-            if (!passwordInput) {
-                errorDiv.textContent = 'Please enter a password';
-                errorDiv.style.display = 'block';
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/check-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: passwordInput })
-                });
-
-                const data = await response.json();
-
-                if (response.status === 429) {
-                    errorDiv.textContent = data.error;
-                    errorDiv.style.display = 'block';
-                    document.getElementById('password-input').disabled = true;
-                    unlockBtn.disabled = true;
-                    unlockBtn.textContent = 'Temporarily Blocked';
-                } else if (data.valid) {
-                    document.getElementById('password-lock-overlay').style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    hideAuthWarning();
-                } else {
-                    errorDiv.textContent = data.error || 'Invalid password.';
-                    errorDiv.style.display = 'block';
-                    document.getElementById('password-input').value = '';
-                }
-            } catch (error) {
-                errorDiv.textContent = 'Error verifying password: ' + error.message;
-                errorDiv.style.display = 'block';
-            }
-        });
-
-        document.getElementById('password-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('unlock-btn').click();
-            }
-        });
 
         let currentEncoderCipher = null;
         let currentEncoderKey = null;
