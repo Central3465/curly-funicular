@@ -40,6 +40,7 @@
             <div class="tabs">
                 <button class="tab-btn active" id="tab-encoder" onclick="switchMode('encoder')">📝 Encoder</button>
                 <button class="tab-btn" id="tab-decoder" onclick="switchMode('decoder')">🔍 Decoder</button>
+                <button class="tab-btn" id="tab-base-converter" onclick="switchMode('base-converter')">🔢 Base Converter</button>
             </div>
         </div>
 
@@ -153,6 +154,130 @@
                 <button id="reset-btn" class="btn btn-secondary">Reset Setup</button>
             </div>
 
+            <div class="section base-converter-section" id="base-converter-section" style="display: none;">
+                <h2>🔢 Number Base & ASCII Converter</h2>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="tab-btn converter-tab active" onclick="switchConverterMode('base')">Base Converter</button>
+                    <button class="tab-btn converter-tab" onclick="switchConverterMode('ascii-to-base')">ASCII → Base</button>
+                    <button class="tab-btn converter-tab" onclick="switchConverterMode('base-to-ascii')">Base → ASCII</button>
+                </div>
+
+                <div id="base-converter-panel" class="converter-panel">
+                    <div class="form-group">
+                        <label for="base-number-input">Number:</label>
+                        <input
+                            type="text"
+                            id="base-number-input"
+                            placeholder="Enter number to convert"
+                            class="input-field"
+                        >
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="base-from-input">From Base (2-36):</label>
+                            <input
+                                type="number"
+                                id="base-from-input"
+                                placeholder="e.g., 10"
+                                class="input-field"
+                                min="2"
+                                max="36"
+                                value="10"
+                            >
+                        </div>
+
+                        <div class="form-group" style="flex: 1;">
+                            <label for="base-to-input">To Base (2-36):</label>
+                            <input
+                                type="number"
+                                id="base-to-input"
+                                placeholder="e.g., 16"
+                                class="input-field"
+                                min="2"
+                                max="36"
+                                value="16"
+                            >
+                        </div>
+                    </div>
+
+                    <button id="convert-base-btn" class="btn btn-primary">Convert</button>
+
+                    <div id="base-convert-result" class="result-container" style="display: none;">
+                        <div class="result-label">Converted Number:</div>
+                        <div id="base-convert-output" class="decoded-output"></div>
+                        <button id="copy-base-convert-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                    </div>
+                </div>
+
+                <div id="ascii-to-base-panel" class="converter-panel" style="display: none;">
+                    <div class="form-group">
+                        <label for="ascii-text-input">Text:</label>
+                        <textarea
+                            id="ascii-text-input"
+                            class="input-field textarea-field"
+                            placeholder="Enter ASCII text to convert"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ascii-base-input">Convert to Base (2-36):</label>
+                        <input
+                            type="number"
+                            id="ascii-base-input"
+                            placeholder="e.g., 16 (hex)"
+                            class="input-field"
+                            min="2"
+                            max="36"
+                            value="16"
+                        >
+                    </div>
+
+                    <button id="ascii-to-base-btn" class="btn btn-primary">Convert</button>
+
+                    <div id="ascii-to-base-result" class="result-container" style="display: none;">
+                        <div class="result-label">Converted Numbers:</div>
+                        <div id="ascii-to-base-output" class="decoded-output"></div>
+                        <button id="copy-ascii-to-base-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                    </div>
+                </div>
+
+                <div id="base-to-ascii-panel" class="converter-panel" style="display: none;">
+                    <div class="form-group">
+                        <label for="base-numbers-input">Numbers (space-separated):</label>
+                        <textarea
+                            id="base-numbers-input"
+                            class="input-field textarea-field"
+                            placeholder="e.g., 48 65 6C 6C 6F (for hex) or 01001000 01100101 (for binary)"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="base-to-ascii-base-input">Numbers are in Base (2-36):</label>
+                        <input
+                            type="number"
+                            id="base-to-ascii-base-input"
+                            placeholder="e.g., 16 (hex)"
+                            class="input-field"
+                            min="2"
+                            max="36"
+                            value="16"
+                        >
+                    </div>
+
+                    <button id="base-to-ascii-btn" class="btn btn-primary">Convert</button>
+
+                    <div id="base-to-ascii-result" class="result-container" style="display: none;">
+                        <div class="result-label">ASCII Text:</div>
+                        <div id="base-to-ascii-output" class="decoded-output"></div>
+                        <button id="copy-base-to-ascii-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="error-message" class="error-message" style="display: none;"></div>
             <div id="success-message" class="success-message" style="display: none;"></div>
         </div>
@@ -231,23 +356,64 @@
             currentMode = mode;
             const tabEncoder = document.getElementById('tab-encoder');
             const tabDecoder = document.getElementById('tab-decoder');
+            const tabBaseConverter = document.getElementById('tab-base-converter');
 
             if (mode === 'encoder') {
                 tabEncoder.classList.add('active');
                 tabDecoder.classList.remove('active');
+                tabBaseConverter.classList.remove('active');
                 document.getElementById('encoder-setup-section').style.display = 'block';
                 document.getElementById('encoder-section').style.display = 'none';
                 document.getElementById('setup-section').style.display = 'none';
                 document.getElementById('decoder-section').style.display = 'none';
+                document.getElementById('base-converter-section').style.display = 'none';
                 clearMessages();
-            } else {
+            } else if (mode === 'decoder') {
                 tabDecoder.classList.add('active');
                 tabEncoder.classList.remove('active');
+                tabBaseConverter.classList.remove('active');
                 document.getElementById('encoder-setup-section').style.display = 'none';
                 document.getElementById('encoder-section').style.display = 'none';
                 document.getElementById('setup-section').style.display = 'block';
                 document.getElementById('decoder-section').style.display = 'none';
+                document.getElementById('base-converter-section').style.display = 'none';
                 clearMessages();
+            } else if (mode === 'base-converter') {
+                tabBaseConverter.classList.add('active');
+                tabEncoder.classList.remove('active');
+                tabDecoder.classList.remove('active');
+                document.getElementById('encoder-setup-section').style.display = 'none';
+                document.getElementById('encoder-section').style.display = 'none';
+                document.getElementById('setup-section').style.display = 'none';
+                document.getElementById('decoder-section').style.display = 'none';
+                document.getElementById('base-converter-section').style.display = 'block';
+                clearMessages();
+            }
+        }
+
+        function switchConverterMode(mode) {
+            const basePanel = document.getElementById('base-converter-panel');
+            const asciiToBasePanel = document.getElementById('ascii-to-base-panel');
+            const baseToAsciiPanel = document.getElementById('base-to-ascii-panel');
+            const tabs = document.querySelectorAll('.converter-tab');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            if (mode === 'base') {
+                basePanel.style.display = 'block';
+                asciiToBasePanel.style.display = 'none';
+                baseToAsciiPanel.style.display = 'none';
+                tabs[0].classList.add('active');
+            } else if (mode === 'ascii-to-base') {
+                basePanel.style.display = 'none';
+                asciiToBasePanel.style.display = 'block';
+                baseToAsciiPanel.style.display = 'none';
+                tabs[1].classList.add('active');
+            } else if (mode === 'base-to-ascii') {
+                basePanel.style.display = 'none';
+                asciiToBasePanel.style.display = 'none';
+                baseToAsciiPanel.style.display = 'block';
+                tabs[2].classList.add('active');
             }
         }
 
@@ -488,6 +654,153 @@
             document.getElementById('setup-section').style.display = 'block';
             document.getElementById('decoder-section').style.display = 'none';
             clearMessages();
+        });
+
+        // Base Converter Functions
+        document.getElementById('convert-base-btn').addEventListener('click', async function() {
+            const number = document.getElementById('base-number-input').value;
+            const fromBase = document.getElementById('base-from-input').value;
+            const toBase = document.getElementById('base-to-input').value;
+
+            if (!number) {
+                showError('Please enter a number');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/convert-base', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        number: number,
+                        from_base: fromBase,
+                        to_base: toBase
+                    })
+                });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('base-convert-output').textContent = data.result;
+                    document.getElementById('base-convert-result').style.display = 'block';
+                    showSuccess('Number converted successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error converting number: ' + error.message);
+            }
+        });
+
+        document.getElementById('copy-base-convert-btn').addEventListener('click', function() {
+            const text = document.getElementById('base-convert-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
+        });
+
+        document.getElementById('ascii-to-base-btn').addEventListener('click', async function() {
+            const text = document.getElementById('ascii-text-input').value;
+            const base = document.getElementById('ascii-base-input').value;
+
+            if (!text) {
+                showError('Please enter text');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/ascii-to-base', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        base: base
+                    })
+                });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('ascii-to-base-output').textContent = data.result;
+                    document.getElementById('ascii-to-base-result').style.display = 'block';
+                    showSuccess('Text converted successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error converting text: ' + error.message);
+            }
+        });
+
+        document.getElementById('copy-ascii-to-base-btn').addEventListener('click', function() {
+            const text = document.getElementById('ascii-to-base-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
+        });
+
+        document.getElementById('base-to-ascii-btn').addEventListener('click', async function() {
+            const numbers = document.getElementById('base-numbers-input').value;
+            const base = document.getElementById('base-to-ascii-base-input').value;
+
+            if (!numbers) {
+                showError('Please enter numbers');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/base-to-ascii', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        numbers: numbers,
+                        base: base
+                    })
+                });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    showError('Session expired. Please reload and enter the password again.');
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('base-to-ascii-output').textContent = data.result;
+                    document.getElementById('base-to-ascii-result').style.display = 'block';
+                    showSuccess('Numbers converted successfully!');
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError('Error converting numbers: ' + error.message);
+            }
+        });
+
+        document.getElementById('copy-base-to-ascii-btn').addEventListener('click', function() {
+            const text = document.getElementById('base-to-ascii-output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('Copied to clipboard!');
+            }).catch(err => {
+                showError('Failed to copy: ' + err.message);
+            });
         });
 
         function showError(message) {

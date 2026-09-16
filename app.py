@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session
-from cipher import decode_message, validate_cipher, encode_message, create_random_cipher
+from cipher import decode_message, validate_cipher, encode_message, create_random_cipher, convert_base, ascii_to_base, base_to_ascii
 import os
 from dotenv import load_dotenv
 from functools import wraps
@@ -120,9 +120,9 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/request-access')
+@app.route('/version')
 def request_access():
-    return render_template('request-access.html')
+    return render_template('version.html')
 
 
 @app.route('/api/check-password', methods=['POST'])
@@ -308,6 +308,78 @@ def request_access_endpoint():
         return jsonify({'error': 'Failed to send request. Please try again later.'}), 500
     except Exception as e:
         return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+@app.route('/api/convert-base', methods=['POST'])
+@require_auth
+def convert_base_endpoint():
+    data = request.get_json()
+    number = data.get('number', '').strip()
+    from_base = data.get('from_base')
+    to_base = data.get('to_base')
+
+    if not number:
+        return jsonify({'error': 'Number cannot be empty'}), 400
+
+    try:
+        from_base = int(from_base)
+        to_base = int(to_base)
+
+        if not (2 <= from_base <= 36) or not (2 <= to_base <= 36):
+            return jsonify({'error': 'Base must be between 2 and 36'}), 400
+
+        result = convert_base(number, from_base, to_base)
+        return jsonify({'result': result, 'success': True})
+    except ValueError as e:
+        return jsonify({'error': f'Invalid number for base {from_base}'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ascii-to-base', methods=['POST'])
+@require_auth
+def ascii_to_base_endpoint():
+    data = request.get_json()
+    text = data.get('text', '')
+    base = data.get('base')
+
+    if not text:
+        return jsonify({'error': 'Text cannot be empty'}), 400
+
+    try:
+        base = int(base)
+
+        if not (2 <= base <= 36):
+            return jsonify({'error': 'Base must be between 2 and 36'}), 400
+
+        result = ascii_to_base(text, base)
+        return jsonify({'result': result, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/base-to-ascii', methods=['POST'])
+@require_auth
+def base_to_ascii_endpoint():
+    data = request.get_json()
+    numbers = data.get('numbers', '').strip()
+    base = data.get('base')
+
+    if not numbers:
+        return jsonify({'error': 'Numbers cannot be empty'}), 400
+
+    try:
+        base = int(base)
+
+        if not (2 <= base <= 36):
+            return jsonify({'error': 'Base must be between 2 and 36'}), 400
+
+        result = base_to_ascii(numbers, base)
+        return jsonify({'result': result, 'success': True})
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
