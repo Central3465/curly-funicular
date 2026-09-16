@@ -8,13 +8,14 @@ import requests
 import re
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from bson.objectid import ObjectId
 import bcrypt
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-DATABASE_URL = os.getenv('DATABASE_URL', 'mongodb://mongo:yFlZqjaZaasntIucyvGuMwcKyYUgeOje@mongodb.railway.internal:27017')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 # MongoDB connection
 try:
@@ -132,11 +133,11 @@ def require_admin(f):
     def decorated_function(*args, **kwargs):
         if not session.get('user_id'):
             return jsonify({'error': 'Unauthorized. Please log in.'}), 401
-        
-        user = users_collection.find_one({'_id': session.get('user_id')}) if users_collection else None
-        if not user or user.get('email') != 'test@test.com':
+
+        user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))}) if users_collection is not None else None
+        if not user or user.get('email') != 'hanlinbai667@gmail.com':
             return jsonify({'error': 'Admin access required'}), 403
-        
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -181,7 +182,7 @@ def admin_page():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
     
     data = request.get_json()
@@ -228,7 +229,7 @@ def register():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
     
     client_ip = get_client_ip()
@@ -292,17 +293,25 @@ def logout():
 @app.route('/api/user-data', methods=['GET'])
 @require_auth
 def get_user_data():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
-    
-    user = users_collection.find_one({'_id': session.get('user_id')})
-    
+
+    user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))})
+
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
+
+    created_at = user.get('created_at')
+    if isinstance(created_at, datetime):
+        created_at = created_at.strftime('%Y-%m-%d %H:%M:%S')
+    elif created_at:
+        created_at = str(created_at)
+    else:
+        created_at = 'Unknown'
+
     return jsonify({
         'email': user['email'],
-        'created_at': user['created_at'].strftime('%Y-%m-%d %H:%M:%S') if user.get('created_at') else 'Unknown',
+        'created_at': created_at,
         'banned': user.get('banned', False)
     })
 
@@ -310,68 +319,81 @@ def get_user_data():
 @app.route('/api/admin/users', methods=['GET'])
 @require_admin
 def get_all_users():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     users = list(users_collection.find({}, {'password': 0}))
-    
+
     for user in users:
         user['_id'] = str(user['_id'])
-        if user.get('created_at'):
-            user['created_at'] = user['created_at'].strftime('%Y-%m-%d %H:%M:%S')
-    
+        created_at = user.get('created_at')
+        if isinstance(created_at, datetime):
+            user['created_at'] = created_at.strftime('%Y-%m-%d %H:%M:%S')
+        elif created_at:
+            user['created_at'] = str(created_at)
+
     return jsonify({'users': users})
 
 
 @app.route('/api/admin/ban-user', methods=['POST'])
 @require_admin
 def ban_user():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     data = request.get_json()
     user_id = data.get('user_id')
     reason = data.get('reason', 'No reason provided')
-    
+
     if not user_id:
         return jsonify({'error': 'User ID is required'}), 400
-    
+
+    try:
+        object_id = ObjectId(user_id)
+    except Exception:
+        return jsonify({'error': 'Invalid user ID format'}), 400
+
     # Don't allow banning the admin
-    user = users_collection.find_one({'_id': user_id})
+    user = users_collection.find_one({'_id': object_id})
     if user and user.get('email') == 'test@test.com':
         return jsonify({'error': 'Cannot ban admin account'}), 403
-    
+
     result = users_collection.update_one(
-        {'_id': user_id},
+        {'_id': object_id},
         {'$set': {'banned': True, 'ban_reason': reason}}
     )
-    
+
     if result.modified_count == 0:
         return jsonify({'error': 'User not found or already banned'}), 404
-    
+
     return jsonify({'success': True, 'message': 'User has been banned'})
 
 
 @app.route('/api/admin/unban-user', methods=['POST'])
 @require_admin
 def unban_user():
-    if not users_collection:
+    if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     data = request.get_json()
     user_id = data.get('user_id')
-    
+
     if not user_id:
         return jsonify({'error': 'User ID is required'}), 400
-    
+
+    try:
+        object_id = ObjectId(user_id)
+    except Exception:
+        return jsonify({'error': 'Invalid user ID format'}), 400
+
     result = users_collection.update_one(
-        {'_id': user_id},
+        {'_id': object_id},
         {'$set': {'banned': False, 'ban_reason': None}}
     )
-    
+
     if result.modified_count == 0:
         return jsonify({'error': 'User not found or not banned'}), 404
-    
+
     return jsonify({'success': True, 'message': 'User has been unbanned'})
 
 
