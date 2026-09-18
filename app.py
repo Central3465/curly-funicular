@@ -165,7 +165,7 @@ def index():
 
 @app.route('/api/csrf-token', methods=['GET'])
 @csrf.exempt
-@limiter.limit("3/minute")
+#@limiter.limit("3/minute")
 def get_csrf_token():
     token = generate_csrf()
     return jsonify({'csrf_token': token})
