@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_wtf.csrf import CSRFProtect
 from cipher import decode_message, validate_cipher, encode_message, create_random_cipher, convert_base, ascii_to_base, base_to_ascii
 import os
 from dotenv import load_dotenv
@@ -15,6 +16,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+csrf = CSRFProtect(app)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # MongoDB connection
@@ -147,6 +149,14 @@ def index():
     if session.get('user_id'):
         return render_template('index.html', logged_in=True)
     return render_template('index.html', logged_in=False)
+
+@app.route('/api/csrf-token', methods=['GET'])
+@csrf.exempt
+def get_csrf_token():
+    token = request.environ.get('csrf.token')
+    if not token:
+        token = csrf.generate_csrf()
+    return jsonify({'csrf_token': token})
 
 @app.route('/credits')
 def credits():
