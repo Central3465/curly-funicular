@@ -534,4 +534,4 @@ def base_to_ascii_endpoint():
 
 
 if __name__ == '__main__':
-    app.run(os.getenv('DEBUG'))
+    app.run(debug=os.getenv('DEBUG', 'True').lower() in ['true', '1', 't'])

@@ -1,65 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>Request Account - Cipher App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
     <style>
-        .request-container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 40px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .request-container h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .request-container p {
-            line-height: 1.6;
-            color: var(--text-primary);
-            margin-bottom: 15px;
-        }
-        .email-link {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .email-link a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .email-link a:hover {
-            text-decoration: underline;
-        }
-        .auth-link {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        .auth-link a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-        .auth-link a:hover {
-            text-decoration: underline;
-        }
+      .request-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .request-container h2 {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .request-container p {
+        line-height: 1.6;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+      }
+      .email-link {
+        text-align: center;
+        margin-top: 30px;
+      }
+      .email-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .email-link a:hover {
+        text-decoration: underline;
+      }
+      .auth-link {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+      }
+      .auth-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+      .auth-link a:hover {
+        text-decoration: underline;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="request-container">
-        <h2>🔐 Request an Account</h2>
+      <h2>🔐 Request an Account</h2>
 
-        <p>If you have the <b>necessary permissions</b>, although using this website may not be a high priority, you're welcome to request an account by emailing <a href="mailto:central3465@gmail.com">central3465@gmail.com</a> from a <b>recognizable email address, explaining who you are.</b></p>
+      <p>
+        If you have the <b>necessary permissions</b>, although using this
+        website may not be a high priority, you're welcome to request an account
+        by emailing
+        <a
+          href="mailto:central3465@gmail.com?subject=Account%20Request&body=[Delete%20this%20text.%20Briefly%20explain%20who%20you%20are]"
+          >central3465@gmail.com</a
+        >
+        from a <b>recognizable email address, explaining who you are.</b>
+      </p>
 
-        <div class="auth-link">
-            Already have an account? <a href="/login">Log in here</a>
-        </div>
+      <div class="auth-link">
+        Already have an account? <a href="/login">Log in here</a>
+      </div>
     </div>
-</body>
+  </body>
 </html>
