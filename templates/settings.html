@@ -116,7 +116,6 @@
             </div>
             
             <button id="logout-btn" class="btn btn-danger">Log Out</button>
-            <button id="back-to-app-btn" class="btn btn-primary">Back to App</button>
         </div>
     </div>
 
@@ -163,11 +162,7 @@
                 errorDiv.style.display = 'block';
             }
         });
-        
-        document.getElementById('back-to-app-btn').addEventListener('click', function() {
-            window.location.href = '/';
-        });
-        
+
         // Load user data on page load
         loadUserData();
     </script>
