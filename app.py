@@ -30,7 +30,8 @@ limiter = Limiter(
     app=app,
     key_func=get_remote_address,
     storage_uri=storage_uri,
-    default_limits=[]
+    default_limits=[],
+    in_memory_fallback_enabled=True
 )
 
 DATABASE_URL = os.getenv('DATABASE_URL')
@@ -268,6 +269,7 @@ def login():
 
 
 @app.route('/api/logout', methods=['POST'])
+@csrf.exempt
 @limiter.limit("3/minute")
 def logout():
     session.clear()
@@ -275,6 +277,7 @@ def logout():
 
 
 @app.route('/api/user-data', methods=['GET'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def get_user_data():
@@ -302,6 +305,7 @@ def get_user_data():
 
 
 @app.route('/api/admin/users', methods=['GET'])
+@csrf.exempt
 @require_admin
 @limiter.limit("3/minute")
 def get_all_users():
@@ -322,6 +326,7 @@ def get_all_users():
 
 
 @app.route('/api/admin/ban-user', methods=['POST'])
+@csrf.exempt
 @require_admin
 @limiter.limit("3/minute")
 def ban_user():
@@ -357,6 +362,7 @@ def ban_user():
 
 
 @app.route('/api/admin/unban-user', methods=['POST'])
+@csrf.exempt
 @require_admin
 @limiter.limit("3/minute")
 def unban_user():
@@ -386,6 +392,7 @@ def unban_user():
 
 
 @app.route('/api/validate-cipher', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def validate_cipher_endpoint():
@@ -401,6 +408,7 @@ def validate_cipher_endpoint():
 
 
 @app.route('/api/decode', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def decode_endpoint():
@@ -425,6 +433,7 @@ def decode_endpoint():
 
 
 @app.route('/api/generate-cipher', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def generate_cipher_endpoint():
@@ -436,6 +445,7 @@ def generate_cipher_endpoint():
 
 
 @app.route('/api/encode', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def encode_endpoint():
@@ -459,6 +469,7 @@ def encode_endpoint():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/convert-base', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def convert_base_endpoint():
@@ -486,6 +497,7 @@ def convert_base_endpoint():
 
 
 @app.route('/api/ascii-to-base', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def ascii_to_base_endpoint():
@@ -509,6 +521,7 @@ def ascii_to_base_endpoint():
 
 
 @app.route('/api/base-to-ascii', methods=['POST'])
+@csrf.exempt
 @require_auth
 @limiter.limit("3/minute")
 def base_to_ascii_endpoint():

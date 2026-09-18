@@ -1,11 +1,11 @@
 """Unit tests for admin API endpoints."""
 import unittest
 import json
-from app import app, users_collection
+from app import app, users_collection, limiter
 import bcrypt
 from datetime import datetime
 from bson.objectid import ObjectId
-
+import pymongo
 
 class AdminAPITestCase(unittest.TestCase):
     """Base test case for admin API tests with authentication setup."""
@@ -14,6 +14,7 @@ class AdminAPITestCase(unittest.TestCase):
         """Set up test client and authenticated session."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         if users_collection is None:
@@ -32,6 +33,7 @@ class AdminAPITestCase(unittest.TestCase):
             'email': self.admin_email,
             'password': hashed_pw,
             'banned': False,
+            'isAdmin': True,
             'created_at': datetime.now()
         })
 
@@ -85,7 +87,7 @@ class TestAdminAccessControl(AdminAPITestCase):
     def test_non_admin_cannot_access_admin_endpoints(self):
         """Test that non-admin users cannot access admin endpoints."""
         # Create non-admin user and login
-        email = 'nonAdmin@example.com'
+        email = 'nonadmin@example.com'
         password = 'testpass123'
         hashed_pw = bcrypt.hashpw(
             password.encode('utf-8'),
@@ -104,11 +106,12 @@ class TestAdminAccessControl(AdminAPITestCase):
             self.client.post('/api/logout')
 
             # Login as non-admin
-            self.client.post(
+            login_response = self.client.post(
                 '/api/login',
                 data=json.dumps({'email': email, 'password': password}),
                 content_type='application/json'
             )
+            self.assertEqual(login_response.status_code, 200)
 
             # Try to access admin endpoint
             response = self.client.get('/api/admin/users')

@@ -1,11 +1,11 @@
 """Unit tests for user API endpoints."""
 import unittest
 import json
-from app import app, users_collection
+from app import app, users_collection, limiter
 import bcrypt
 from datetime import datetime
 from bson.objectid import ObjectId
-
+import pymongo
 
 class UserAPITestCase(unittest.TestCase):
     """Base test case for user API tests with authentication setup."""
@@ -14,6 +14,7 @@ class UserAPITestCase(unittest.TestCase):
         """Set up test client and authenticated session."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         if users_collection is None:

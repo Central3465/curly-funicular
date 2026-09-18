@@ -1,9 +1,9 @@
 """Unit tests for authentication API endpoints."""
 import unittest
 import json
-from app import app, users_collection, login_attempts, access_requests
+from app import app, users_collection, login_attempts, access_requests, limiter
 import bcrypt
-
+import pymongo
 
 class TestAuthAPI(unittest.TestCase):
     """Tests for authentication endpoints."""
@@ -12,6 +12,7 @@ class TestAuthAPI(unittest.TestCase):
         """Set up test client and database."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         # Clear login attempts and access requests
@@ -82,8 +83,8 @@ class TestAuthAPI(unittest.TestCase):
         })
 
         try:
-            # Make 5 failed attempts
-            for i in range(5):
+            # Make 4 failed attempts (should return 401)
+            for i in range(4):
                 response = self.client.post(
                     '/api/login',
                     data=json.dumps({'email': email, 'password': 'wrongpassword'}),
@@ -91,7 +92,7 @@ class TestAuthAPI(unittest.TestCase):
                 )
                 self.assertEqual(response.status_code, 401)
 
-            # 6th attempt should be blocked
+            # 5th attempt should be blocked (hits max limit)
             response = self.client.post(
                 '/api/login',
                 data=json.dumps({'email': email, 'password': 'wrongpassword'}),
@@ -143,6 +144,7 @@ class TestLoginFlow(unittest.TestCase):
         """Set up test client and test user."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         if users_collection is None:

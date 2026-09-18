@@ -1,11 +1,11 @@
 """Unit tests for cipher API endpoints."""
 import unittest
 import json
-from app import app, users_collection
+from app import app, users_collection, limiter
 from cipher import create_random_cipher
 import bcrypt
 from datetime import datetime
-
+import pymongo
 
 class CipherAPITestCase(unittest.TestCase):
     """Base test case for cipher API tests with authentication setup."""
@@ -14,6 +14,7 @@ class CipherAPITestCase(unittest.TestCase):
         """Set up test client and authenticated session."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         if users_collection is None:

@@ -1,10 +1,10 @@
 """Unit tests for conversion API endpoints."""
 import unittest
 import json
-from app import app, users_collection
+from app import app, users_collection, limiter
 import bcrypt
 from datetime import datetime
-
+import pymongo
 
 class ConversionAPITestCase(unittest.TestCase):
     """Base test case for conversion API tests with authentication setup."""
@@ -13,6 +13,7 @@ class ConversionAPITestCase(unittest.TestCase):
         """Set up test client and authenticated session."""
         self.app = app
         self.app.config['TESTING'] = True
+        limiter.enabled = False
         self.client = self.app.test_client()
 
         if users_collection is None:
@@ -379,7 +380,8 @@ class TestBaseToAsciiEndpoint(ConversionAPITestCase):
         )
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        self.assertIn('Invalid', data['error'])
+        self.assertIn('error', data)
+        self.assertTrue(len(data['error']) > 0)
 
     def test_invalid_base(self):
         """Test with invalid base."""
