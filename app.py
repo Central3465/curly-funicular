@@ -135,7 +135,7 @@ def require_admin(f):
             return jsonify({'error': 'Unauthorized. Please log in.'}), 401
 
         user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))}) if users_collection is not None else None
-        if not user or user.get('email') != 'hanlinbai667@gmail.com':
+        if not user or not user.get('isAdmin', False):
             return jsonify({'error': 'Admin access required'}), 403
 
         return f(*args, **kwargs)
@@ -313,7 +313,7 @@ def ban_user():
 
     # Don't allow banning the admin
     user = users_collection.find_one({'_id': object_id})
-    if user and user.get('email') == 'test@test.com':
+    if user and user.get('isAdmin', False):
         return jsonify({'error': 'Cannot ban admin account'}), 403
 
     result = users_collection.update_one(
