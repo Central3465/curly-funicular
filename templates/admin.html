@@ -181,7 +181,26 @@
     </div>
 
     <script>
+        let csrfToken = null;
         let currentUserToBan = null;
+
+        async function fetchCSRFToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const data = await response.json();
+                csrfToken = data.csrf_token;
+            } catch (error) {
+                console.error('Failed to fetch CSRF token:', error);
+            }
+        }
+
+        function getHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            return headers;
+        }
 
         async function loadUsers() {
             try {
@@ -269,16 +288,16 @@
 
         async function confirmBan() {
             const reason = document.getElementById('ban-reason').value.trim();
-            
+
             try {
                 const response = await fetch('/api/admin/ban-user', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({ user_id: currentUserToBan, reason })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     closeBanModal();
                     loadUsers();
@@ -298,7 +317,7 @@
             try {
                 const response = await fetch('/api/admin/unban-user', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({ user_id: userId })
                 });
                 
@@ -320,12 +339,13 @@
 
         document.getElementById('cancel-ban-btn').addEventListener('click', closeBanModal);
         document.getElementById('confirm-ban-btn').addEventListener('click', confirmBan);
-        
+
         // Close modal when clicking outside
         document.getElementById('ban-modal').addEventListener('click', function(e) {
             if (e.target === this) closeBanModal();
         });
 
+        window.addEventListener('load', fetchCSRFToken);
         loadUsers();
     </script>
 </body>

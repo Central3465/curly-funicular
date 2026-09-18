@@ -69,7 +69,7 @@
         </div>
     </div>
 
-    <div class="container" style="{% if not logged_in %}filter: blur(5px); pointer-events: none;{% endif %}">
+    <div class="container" {% if not logged_in %}style="filter: blur(5px); pointer-events: none;"{% endif %}>
         <div class="header">
             <h1>🔐 Cypher Encoder & Decoder</h1>
             <p class="subtitle">Encrypt and decrypt messages with your custom cipher and secret key</p>
@@ -320,14 +320,36 @@
     </div>
 
     <script>
+        let csrfToken = null;
+
+        async function fetchCSRFToken() {
+            try {
+                const response = await fetch('/api/csrf-token');
+                const data = await response.json();
+                csrfToken = data.csrf_token;
+            } catch (error) {
+                console.error('Failed to fetch CSRF token:', error);
+            }
+        }
+
+        function getHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            return headers;
+        }
+
         async function logout() {
             try {
-                await fetch('/api/logout', { method: 'POST' });
+                await fetch('/api/logout', { method: 'POST', headers: getHeaders() });
                 window.location.href = '/login';
             } catch (error) {
                 console.error('Logout error:', error);
             }
         }
+
+        window.addEventListener('load', fetchCSRFToken);
 
         function showAuthWarning() {
             const warningBanner = document.getElementById('auth-warning-banner');
@@ -414,7 +436,7 @@
             try {
                 const response = await fetch('/api/generate-cipher', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: getHeaders()
                 });
 
                 if (response.status === 401) {
@@ -463,7 +485,7 @@
             try {
                 const response = await fetch('/api/validate-cipher', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({ cipher: cipherInput })
                 });
 
@@ -501,7 +523,7 @@
             try {
                 const response = await fetch('/api/encode', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         cipher: currentEncoderCipher,
                         message: message,
@@ -562,7 +584,7 @@
             try {
                 const response = await fetch('/api/validate-cipher', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({ cipher: cipherInput })
                 });
 
@@ -600,7 +622,7 @@
             try {
                 const response = await fetch('/api/decode', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         cipher: currentDecoderCipher,
                         message: message,
@@ -663,7 +685,7 @@
             try {
                 const response = await fetch('/api/convert-base', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         number: number,
                         from_base: fromBase,
@@ -712,7 +734,7 @@
             try {
                 const response = await fetch('/api/ascii-to-base', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         text: text,
                         base: base
@@ -760,7 +782,7 @@
             try {
                 const response = await fetch('/api/base-to-ascii', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders(),
                     body: JSON.stringify({
                         numbers: numbers,
                         base: base

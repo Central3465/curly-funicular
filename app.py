@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 from cipher import decode_message, validate_cipher, encode_message, create_random_cipher, convert_base, ascii_to_base, base_to_ascii
 import os
 from dotenv import load_dotenv
@@ -153,9 +153,7 @@ def index():
 @app.route('/api/csrf-token', methods=['GET'])
 @csrf.exempt
 def get_csrf_token():
-    token = request.environ.get('csrf.token')
-    if not token:
-        token = csrf.generate_csrf()
+    token = generate_csrf()
     return jsonify({'csrf_token': token})
 
 @app.route('/credits')
@@ -191,11 +189,13 @@ def admin_page():
 
 
 @app.route('/api/register', methods=['POST'])
+@csrf.exempt
 def register():
     return jsonify({'error': 'Registration is disabled. Please email contact@bai.studio to request an account.'}), 403
 
 
 @app.route('/api/login', methods=['POST'])
+@csrf.exempt
 def login():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
