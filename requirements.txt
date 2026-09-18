@@ -4,4 +4,3 @@ dotenv
 requests
 pymongo
 bcrypt
-unittest
