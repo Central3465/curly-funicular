@@ -1,5 +1,6 @@
 import string
 import hashlib
+import ast
 
 letters = list(string.ascii_lowercase)
 # Create set for O(1) membership testing instead of O(n) list search
@@ -54,7 +55,7 @@ def decode_message(coded_message, cipher, key):
 
 def validate_cipher(cipher_input):
     try:
-        cipher = eval(cipher_input) if isinstance(cipher_input, str) else cipher_input
+        cipher = ast.literal_eval(cipher_input) if isinstance(cipher_input, str) else cipher_input
 
         if not isinstance(cipher, list):
             return False, "Cipher must be a list"
