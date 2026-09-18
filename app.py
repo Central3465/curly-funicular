@@ -13,6 +13,7 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from bson.objectid import ObjectId
 import bcrypt
+import json
 
 load_dotenv()
 
@@ -54,6 +55,8 @@ LOCKOUT_DURATION = timedelta(hours=24)
 access_requests = {}
 ACCESS_REQUEST_LIMIT = 1
 ACCESS_REQUEST_WINDOW = timedelta(minutes=1)
+
+banned_ips = {}
 
 
 def get_client_ip():
@@ -126,6 +129,36 @@ def can_make_access_request(ip):
 
 def record_access_request(ip):
     access_requests[ip] = datetime.now()
+
+
+def is_ip_banned(ip):
+    if ip not in banned_ips:
+        return False, None
+
+    ban_data = banned_ips[ip]
+    expires_at = ban_data['expires_at']
+
+    if datetime.now() > expires_at:
+        del banned_ips[ip]
+        return False, None
+
+    remaining = expires_at - datetime.now()
+    return True, remaining
+
+
+def ban_ip(ip, duration_hours, reason=''):
+    expires_at = datetime.now() + timedelta(hours=duration_hours)
+    banned_ips[ip] = {
+        'ip_address': ip,
+        'reason': reason,
+        'banned_at': datetime.now(),
+        'expires_at': expires_at
+    }
+
+
+def unban_ip(ip):
+    if ip in banned_ips:
+        del banned_ips[ip]
 
 
 def validate_email(email):
@@ -201,6 +234,51 @@ def settings_page():
 @require_admin
 def admin_page():
     return render_template('admin.html')
+
+
+@app.route('/api/request-account', methods=['POST'])
+@csrf.exempt
+@limiter.limit("3/minute")
+def request_account():
+    data = request.get_json()
+    full_name = data.get('fullName', '').strip()
+    email = data.get('email', '').strip().lower()
+    description = data.get('description', '').strip()
+    client_ip = get_client_ip()
+
+    if not full_name or not email or not description:
+        return jsonify({'error': 'All fields are required'}), 400
+
+    if not validate_email(email):
+        return jsonify({'error': 'Invalid email address'}), 400
+
+    if len(description) < 10:
+        return jsonify({'error': 'Description must be at least 10 characters'}), 400
+
+    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
+    if discord_webhook_url:
+        embed = {
+            'title': '🔐 New Account Request',
+            'description': description,
+            'color': 4886754,
+            'fields': [
+                {'name': 'Full Name', 'value': full_name, 'inline': True},
+                {'name': 'Email', 'value': email, 'inline': True},
+                {'name': 'IP Address', 'value': client_ip, 'inline': True},
+                {'name': 'Timestamp', 'value': datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'), 'inline': True}
+            ]
+        }
+
+        payload = {'embeds': [embed]}
+
+        try:
+            response = requests.post(discord_webhook_url, json=payload, timeout=5)
+            if response.status_code not in [200, 204]:
+                print(f"Discord webhook failed with status {response.status_code}: {response.text}")
+        except Exception as e:
+            print(f"Error sending Discord webhook: {e}")
+
+    return jsonify({'success': True, 'message': 'Account request submitted successfully'}), 200
 
 
 @app.route('/api/register', methods=['POST'])
@@ -389,6 +467,121 @@ def unban_user():
         return jsonify({'error': 'User not found or not banned'}), 404
 
     return jsonify({'success': True, 'message': 'User has been unbanned'})
+
+
+@app.route('/api/admin/add-user', methods=['POST'])
+@csrf.exempt
+@require_admin
+@limiter.limit("3/minute")
+def add_user():
+    if users_collection is None:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    if not validate_email(email):
+        return jsonify({'error': 'Invalid email address'}), 400
+
+    if len(password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    new_user = {
+        'email': email,
+        'password': hashed_password,
+        'isAdmin': False,
+        'created_at': datetime.now(),
+        'banned': False
+    }
+
+    try:
+        result = users_collection.insert_one(new_user)
+        return jsonify({'success': True, 'message': 'User added successfully', 'user_id': str(result.inserted_id)})
+    except Exception as e:
+        if 'duplicate' in str(e).lower():
+            return jsonify({'error': 'Email already exists'}), 409
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/ban-ip', methods=['POST'])
+@csrf.exempt
+@require_admin
+@limiter.limit("3/minute")
+def ban_ip_endpoint():
+    data = request.get_json()
+    ip_address = data.get('ip_address', '').strip()
+    duration = data.get('duration', 24)
+    reason = data.get('reason', '')
+
+    if not ip_address:
+        return jsonify({'error': 'IP address is required'}), 400
+
+    try:
+        duration = int(duration)
+        if duration < 1:
+            return jsonify({'error': 'Duration must be at least 1 hour'}), 400
+    except ValueError:
+        return jsonify({'error': 'Duration must be a number'}), 400
+
+    ban_ip(ip_address, duration, reason)
+    return jsonify({'success': True, 'message': f'IP {ip_address} banned for {duration} hours'})
+
+
+@app.route('/api/admin/unban-ip', methods=['POST'])
+@csrf.exempt
+@require_admin
+@limiter.limit("3/minute")
+def unban_ip_endpoint():
+    data = request.get_json()
+    ip_address = data.get('ip_address', '').strip()
+
+    if not ip_address:
+        return jsonify({'error': 'IP address is required'}), 400
+
+    unban_ip(ip_address)
+    return jsonify({'success': True, 'message': f'IP {ip_address} has been unbanned'})
+
+
+@app.route('/api/admin/banned-ips', methods=['GET'])
+@csrf.exempt
+@require_admin
+@limiter.limit("3/minute")
+def get_banned_ips():
+    bans = []
+    for ip, ban_data in banned_ips.items():
+        bans.append({
+            'ip_address': ip,
+            'reason': ban_data['reason'],
+            'banned_at': ban_data['banned_at'].isoformat(),
+            'expires_at': ban_data['expires_at'].isoformat()
+        })
+
+    return jsonify({'banned_ips': bans})
+
+
+@app.route('/api/check-ip-ban', methods=['GET'])
+@csrf.exempt
+#@limiter.limit("3/minute")
+def check_ip_ban():
+    client_ip = get_client_ip()
+    is_banned, remaining = is_ip_banned(client_ip)
+
+    if is_banned:
+        hours = int(remaining.total_seconds() // 3600)
+        minutes = int((remaining.total_seconds() % 3600) // 60)
+        return jsonify({
+            'banned': True,
+            'remaining_time': f"{hours}h {minutes}m",
+            'message': f'This IP address has been banned. Please try again in {hours}h {minutes}m.'
+        })
+
+    return jsonify({'banned': False})
 
 
 @app.route('/api/validate-cipher', methods=['POST'])

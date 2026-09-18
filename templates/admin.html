@@ -193,6 +193,57 @@
             font-size: 10px;
             margin-left: 5px;
         }
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .tab-btn:hover {
+            border-color: var(--primary-color);
+        }
+        .section {
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .section h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -205,23 +256,85 @@
                 <a href="/settings">Settings</a>
             </div>
         </div>
-        
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <button id="tab-users" class="tab-btn active">Users</button>
+            <button id="tab-add-user" class="tab-btn">Add User</button>
+            <button id="tab-banned-ips" class="tab-btn">Banned IPs</button>
+        </div>
+
         <div id="error-message" class="error-message"></div>
-        
-        <div id="loading" class="loading">Loading users...</div>
-        
-        <table id="users-table" class="users-table" style="display: none;">
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Created At</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="users-tbody">
-            </tbody>
-        </table>
+
+        <!-- Users Tab -->
+        <div id="users-section" class="section" style="display: block;">
+            <div id="loading" class="loading">Loading users...</div>
+
+            <table id="users-table" class="users-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add User Tab -->
+        <div id="add-user-section" class="section" style="display: none;">
+            <h3>Add New User</h3>
+            <form id="add-user-form">
+                <div class="form-group">
+                    <label for="new-email">Email Address</label>
+                    <input type="email" id="new-email" required placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="new-password">Password</label>
+                    <input type="password" id="new-password" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn" style="background: #28a745; color: white;">Add User</button>
+            </form>
+        </div>
+
+        <!-- Banned IPs Tab -->
+        <div id="banned-ips-section" class="section" style="display: none;">
+            <h3>Banned IP Addresses</h3>
+            <div style="margin-bottom: 20px;">
+                <h4>Ban New IP</h4>
+                <form id="ban-ip-form">
+                    <div class="form-group">
+                        <label for="ban-ip-address">IP Address</label>
+                        <input type="text" id="ban-ip-address" required placeholder="192.168.1.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ban-duration">Duration (hours)</label>
+                        <input type="number" id="ban-duration" required min="1" value="24" placeholder="24">
+                    </div>
+                    <div class="form-group">
+                        <label for="ban-ip-reason">Reason (optional)</label>
+                        <input type="text" id="ban-ip-reason" placeholder="Reason for ban">
+                    </div>
+                    <button type="submit" class="btn" style="background: #dc3545; color: white;">Ban IP</button>
+                </form>
+            </div>
+            <div id="loading-ips" class="loading">Loading banned IPs...</div>
+            <table id="banned-ips-table" class="users-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Reason</th>
+                        <th>Banned At</th>
+                        <th>Expires At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="banned-ips-tbody">
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="ban-modal" class="ban-modal">
@@ -258,15 +371,27 @@
             return headers;
         }
 
+        function showTab(tabName) {
+            document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(tabName + '-section').style.display = 'block';
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            if (tabName === 'banned-ips') {
+                loadBannedIPs();
+            }
+        }
+
         async function loadUsers() {
             try {
                 const response = await fetch('/api/admin/users');
-                
+
                 if (response.status === 401) {
                     window.location.href = '/login';
                     return;
                 }
-                
+
                 if (response.status === 403) {
                     const errorDiv = document.getElementById('error-message');
                     errorDiv.textContent = 'Access denied. Admin privileges required.';
@@ -274,32 +399,32 @@
                     document.getElementById('loading').style.display = 'none';
                     return;
                 }
-                
+
                 const data = await response.json();
-                
+
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('users-table').style.display = 'table';
-                
+
                 const tbody = document.getElementById('users-tbody');
                 tbody.innerHTML = '';
-                
+
                 data.users.forEach(user => {
                     const tr = document.createElement('tr');
-                    
+
                     const emailTd = document.createElement('td');
                     emailTd.textContent = user.email;
                     if (user.email === 'hanlinbai667@gmail.com') {
                         emailTd.innerHTML += ' <span class="admin-badge">ADMIN</span>';
                     }
-                    
+
                     const createdTd = document.createElement('td');
                     createdTd.textContent = user.created_at || 'Unknown';
-                    
+
                     const statusTd = document.createElement('td');
-                    statusTd.innerHTML = user.banned 
-                        ? '<span class="status-banned">Banned ⚠️</span>' 
+                    statusTd.innerHTML = user.banned
+                        ? '<span class="status-banned">Banned ⚠️</span>'
                         : '<span class="status-active">Active ✓</span>';
-                    
+
                     const actionsTd = document.createElement('td');
                     if (user.email !== 'hanlinbai667@gmail.com') {
                         if (user.banned) {
@@ -316,7 +441,7 @@
                             actionsTd.appendChild(banBtn);
                         }
                     }
-                    
+
                     tr.appendChild(emailTd);
                     tr.appendChild(createdTd);
                     tr.appendChild(statusTd);
@@ -328,6 +453,57 @@
                 errorDiv.textContent = 'Error loading users: ' + error.message;
                 errorDiv.style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function loadBannedIPs() {
+            try {
+                const response = await fetch('/api/admin/banned-ips');
+
+                if (!response.ok) throw new Error('Failed to load banned IPs');
+
+                const data = await response.json();
+
+                document.getElementById('loading-ips').style.display = 'none';
+                document.getElementById('banned-ips-table').style.display = 'table';
+
+                const tbody = document.getElementById('banned-ips-tbody');
+                tbody.innerHTML = '';
+
+                data.banned_ips.forEach(ban => {
+                    const tr = document.createElement('tr');
+
+                    const ipTd = document.createElement('td');
+                    ipTd.textContent = ban.ip_address;
+
+                    const reasonTd = document.createElement('td');
+                    reasonTd.textContent = ban.reason || 'N/A';
+
+                    const bannedAtTd = document.createElement('td');
+                    bannedAtTd.textContent = new Date(ban.banned_at).toLocaleString();
+
+                    const expiresTd = document.createElement('td');
+                    expiresTd.textContent = new Date(ban.expires_at).toLocaleString();
+
+                    const actionsTd = document.createElement('td');
+                    const unbanBtn = document.createElement('button');
+                    unbanBtn.className = 'btn btn-success';
+                    unbanBtn.textContent = 'Unban';
+                    unbanBtn.onclick = () => unbanIP(ban.ip_address);
+                    actionsTd.appendChild(unbanBtn);
+
+                    tr.appendChild(ipTd);
+                    tr.appendChild(reasonTd);
+                    tr.appendChild(bannedAtTd);
+                    tr.appendChild(expiresTd);
+                    tr.appendChild(actionsTd);
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error loading banned IPs: ' + error.message;
+                errorDiv.style.display = 'block';
+                document.getElementById('loading-ips').style.display = 'none';
             }
         }
 
@@ -376,9 +552,9 @@
                     headers: getHeaders(),
                     body: JSON.stringify({ user_id: userId })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     loadUsers();
                 } else {
@@ -393,8 +569,108 @@
             }
         }
 
+        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('new-email').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+
+            try {
+                const response = await fetch('/api/admin/add-user', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('error-message').style.display = 'none';
+                    const msg = document.getElementById('error-message');
+                    msg.textContent = 'User added successfully!';
+                    msg.style.background = '#d4edda';
+                    msg.style.color = '#155724';
+                    msg.style.display = 'block';
+                    document.getElementById('add-user-form').reset();
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = data.error || 'Failed to add user';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error adding user: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('ban-ip-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ip_address = document.getElementById('ban-ip-address').value.trim();
+            const duration = parseInt(document.getElementById('ban-duration').value);
+            const reason = document.getElementById('ban-ip-reason').value.trim();
+
+            try {
+                const response = await fetch('/api/admin/ban-ip', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ ip_address, duration, reason })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('error-message').style.display = 'none';
+                    const msg = document.getElementById('error-message');
+                    msg.textContent = 'IP banned successfully!';
+                    msg.style.background = '#d4edda';
+                    msg.style.color = '#155724';
+                    msg.style.display = 'block';
+                    document.getElementById('ban-ip-form').reset();
+                    loadBannedIPs();
+                    setTimeout(() => msg.style.display = 'none', 3000);
+                } else {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = data.error || 'Failed to ban IP';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error banning IP: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        async function unbanIP(ipAddress) {
+            try {
+                const response = await fetch('/api/admin/unban-ip', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ ip_address: ipAddress })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    loadBannedIPs();
+                } else {
+                    const errorDiv = document.getElementById('error-message');
+                    errorDiv.textContent = data.error || 'Failed to unban IP';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error unbanning IP: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
         document.getElementById('cancel-ban-btn').addEventListener('click', closeBanModal);
         document.getElementById('confirm-ban-btn').addEventListener('click', confirmBan);
+
+        document.getElementById('tab-users').addEventListener('click', () => showTab('users'));
+        document.getElementById('tab-add-user').addEventListener('click', () => showTab('add-user'));
+        document.getElementById('tab-banned-ips').addEventListener('click', () => showTab('banned-ips'));
 
         // Close modal when clicking outside
         document.getElementById('ban-modal').addEventListener('click', function(e) {

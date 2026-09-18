@@ -22,22 +22,78 @@
         text-align: center;
         margin-bottom: 30px;
       }
-      .request-container p {
-        line-height: 1.6;
-        color: var(--text-primary);
-        margin-bottom: 15px;
+      .form-group {
+        margin-bottom: 20px;
       }
-      .email-link {
-        text-align: center;
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(70, 130, 180, 0.1);
+      }
+      .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+      .captcha-group {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+      .captcha-group input {
+        flex: 0 0 100px;
+      }
+      .captcha-question {
+        flex: 1;
+        padding: 10px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
         margin-top: 30px;
       }
-      .email-link a {
-        color: var(--primary-color);
-        text-decoration: none;
+      button {
+        flex: 1;
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
         font-weight: 600;
+        transition: opacity 0.2s;
       }
-      .email-link a:hover {
-        text-decoration: underline;
+      .submit-btn {
+        background: var(--primary-color);
+        color: white;
+      }
+      .submit-btn:hover {
+        opacity: 0.9;
+      }
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .auth-link {
         text-align: center;
@@ -52,26 +108,274 @@
       .auth-link a:hover {
         text-decoration: underline;
       }
+      .success-message {
+        display: none;
+        padding: 20px;
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 5px;
+        color: #155724;
+        margin-bottom: 20px;
+      }
+      .success-message.show {
+        display: block;
+      }
+      .error-message {
+        display: none;
+        padding: 20px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        color: #721c24;
+        margin-bottom: 20px;
+      }
+      .error-message.show {
+        display: block;
+      }
+      .ban-container {
+        padding: 40px;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        text-align: center;
+        margin: 20px 0;
+      }
+      .ban-container h3 {
+        color: #dc3545;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+      }
+      .ban-container p {
+        color: var(--text-primary);
+        line-height: 1.6;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+      }
+      .ban-time-remaining {
+        background: var(--bg-primary);
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        font-weight: 600;
+        color: #dc3545;
+        font-size: 1.2rem;
+      }
+      .request-container p {
+        line-height: 1.6;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+      }
     </style>
   </head>
   <body>
     <div class="request-container">
       <h2>🔐 Request an Account</h2>
 
+      <div class="success-message" id="successMessage">
+        <strong>Success!</strong> Your email client will open with your details prefilled. Please check and send the email to complete your account request.
+      </div>
+
+      <div class="error-message" id="errorMessage"></div>
+
       <p>
         If you have the <b>necessary permissions</b>, although using this
         website may not be a high priority, you're welcome to request an account
-        by emailing
-        <a
-          href="mailto:central3465@gmail.com?subject=Account%20Request&body=[Delete%20this%20text.%20Briefly%20explain%20who%20you%20are]"
-          >central3465@gmail.com</a
-        >
+        by filling out the form below. Please ensure you send the email
         from a <b>recognizable email address, explaining who you are.</b>
       </p>
+
+      <div class="ban-container" id="banContainer" style="display: none;">
+        <h3>🚫 IP Address Banned</h3>
+        <p>This IP address has been temporarily banned from submitting account requests.</p>
+        <div class="ban-time-remaining" id="banTimeRemaining"></div>
+        <p>Please try again after the ban expires.</p>
+      </div>
+
+      <form id="requestForm" style="display: block;">
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input
+            type="text"
+            id="fullName"
+            name="fullName"
+            required
+            placeholder="Your full name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="your@email.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Tell us about yourself</label>
+          <textarea
+            id="description"
+            name="description"
+            required
+            placeholder="Briefly explain who you are and why you need access to this application..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Security verification</label>
+          <div class="captcha-group">
+            <div class="captcha-question" id="captchaQuestion"></div>
+            <input
+              type="number"
+              id="captchaAnswer"
+              name="captchaAnswer"
+              placeholder="Answer"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="submit-btn" id="submitBtn">Submit Request</button>
+        </div>
+      </form>
 
       <div class="auth-link">
         Already have an account? <a href="/login">Log in here</a>
       </div>
     </div>
+
+    <script>
+      let captchaCorrectAnswer = 0;
+
+      async function checkIPBan() {
+        try {
+          const response = await fetch('/api/check-ip-ban');
+          const data = await response.json();
+
+          if (data.banned) {
+            document.getElementById('banContainer').style.display = 'block';
+            document.getElementById('banTimeRemaining').textContent = data.remaining_time;
+            document.getElementById('requestForm').style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Error checking IP ban:', error);
+        }
+      }
+
+      function generateCaptcha() {
+        const num1 = Math.floor(Math.random() * 20) + 1;
+        const num2 = Math.floor(Math.random() * 20) + 1;
+        const operations = ['+', '-', '*'];
+        const operation = operations[Math.floor(Math.random() * operations.length)];
+
+        let answer;
+        let questionText;
+
+        switch(operation) {
+          case '+':
+            answer = num1 + num2;
+            questionText = `${num1} + ${num2} = ?`;
+            break;
+          case '-':
+            answer = num1 - num2;
+            questionText = `${num1} - ${num2} = ?`;
+            break;
+          case '*':
+            answer = num1 * num2;
+            questionText = `${num1} × ${num2} = ?`;
+            break;
+        }
+
+        captchaCorrectAnswer = answer;
+        document.getElementById('captchaQuestion').textContent = questionText;
+        document.getElementById('captchaAnswer').value = '';
+      }
+
+      document.getElementById('requestForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        successMessage.classList.remove('show');
+        errorMessage.classList.remove('show');
+
+        try {
+          const banCheckResponse = await fetch('/api/check-ip-ban');
+          const banCheckData = await banCheckResponse.json();
+
+          if (banCheckData.banned) {
+            errorMessage.textContent = 'Your IP address is banned. ' + banCheckData.remaining_time;
+            errorMessage.classList.add('show');
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking IP ban:', error);
+        }
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const captchaAnswer = document.getElementById('captchaAnswer').value.trim();
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (!fullName || !email || !description || !captchaAnswer) {
+          errorMessage.textContent = 'Please fill in all fields.';
+          errorMessage.classList.add('show');
+          return;
+        }
+
+        if (parseInt(captchaAnswer) !== captchaCorrectAnswer) {
+          errorMessage.textContent = 'Incorrect security verification answer. Please try again.';
+          errorMessage.classList.add('show');
+          generateCaptcha();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        try {
+          const response = await fetch('/api/request-account', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fullName,
+              email,
+              description
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to submit request');
+          }
+
+          successMessage.classList.add('show');
+          document.getElementById('requestForm').style.display = 'none';
+
+          setTimeout(() => {
+            const mailtoLink = `mailto:central3465@gmail.com?subject=Account%20Request%20from%20${encodeURIComponent(fullName)}&body=${encodeURIComponent(
+              `Name: ${fullName}\nEmail: ${email}\n\n${description}`
+            )}`;
+            window.location.href = mailtoLink;
+          }, 1000);
+
+        } catch (error) {
+          errorMessage.textContent = error.message || 'An error occurred. Please try again.';
+          errorMessage.classList.add('show');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Request';
+        }
+      });
+
+      generateCaptcha();
+      checkIPBan();
+    </script>
   </body>
 </html>
