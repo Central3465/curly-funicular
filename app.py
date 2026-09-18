@@ -182,49 +182,7 @@ def admin_page():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    if users_collection is None:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    data = request.get_json()
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
-    confirm_password = data.get('confirm_password', '')
-    
-    # Validation
-    if not email or not password:
-        return jsonify({'error': 'Email and password are required'}), 400
-    
-    if not validate_email(email):
-        return jsonify({'error': 'Invalid email format'}), 400
-    
-    if len(password) < 8:
-        return jsonify({'error': 'Password must be at least 8 characters long'}), 400
-    
-    if password != confirm_password:
-        return jsonify({'error': 'Passwords do not match'}), 400
-    
-    # Check if user already exists
-    existing_user = users_collection.find_one({'email': email})
-    if existing_user:
-        return jsonify({'error': 'An account with this email already exists'}), 409
-    
-    # Hash password
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    # Create user
-    user_data = {
-        'email': email,
-        'password': hashed_password,
-        'created_at': datetime.now(),
-        'banned': False,
-        'ban_reason': None
-    }
-    
-    try:
-        result = users_collection.insert_one(user_data)
-        return jsonify({'success': True, 'message': 'Registration successful. Please log in.'}), 201
-    except Exception as e:
-        return jsonify({'error': f'Registration failed: {str(e)}'}), 500
+    return jsonify({'error': 'Registration is disabled. Please email contact@bai.studio to request an account.'}), 403
 
 
 @app.route('/api/login', methods=['POST'])
