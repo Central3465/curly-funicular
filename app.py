@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_wtf.csrf import CSRFProtect, generate_csrf
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from cipher import decode_message, validate_cipher, encode_message, create_random_cipher, convert_base, ascii_to_base, base_to_ascii
 import os
 from dotenv import load_dotenv
@@ -15,8 +17,22 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.secret_key = os.getenv('SECRET_KEY')
 csrf = CSRFProtect(app)
+
+REDIS_URL = os.getenv('REDIS_URL')
+if REDIS_URL:
+    storage_uri = REDIS_URL
+else:
+    storage_uri = 'file:///tmp/flask_limiter'
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri=storage_uri,
+    default_limits=[]
+)
+
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 # MongoDB connection
@@ -24,19 +40,16 @@ try:
     client = MongoClient(DATABASE_URL, serverSelectionTimeoutMS=5000)
     db = client['cipher_app']
     users_collection = db['users']
-    # Create index on email for faster lookups
     users_collection.create_index('email', unique=True)
 except ConnectionFailure as e:
     print(f"Failed to connect to MongoDB: {e}")
     db = None
     users_collection = None
 
-# Rate limiting for login attempts
 login_attempts = {}
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(hours=24)
 
-# Rate limiting for access requests
 access_requests = {}
 ACCESS_REQUEST_LIMIT = 1
 ACCESS_REQUEST_WINDOW = timedelta(minutes=1)
@@ -152,6 +165,7 @@ def index():
 
 @app.route('/api/csrf-token', methods=['GET'])
 @csrf.exempt
+@limiter.limit("3/minute")
 def get_csrf_token():
     token = generate_csrf()
     return jsonify({'csrf_token': token})
@@ -190,6 +204,7 @@ def admin_page():
 
 @app.route('/api/register', methods=['POST'])
 @csrf.exempt
+@limiter.limit("3/minute")
 def register():
     return jsonify({'error': 'Registration is disabled. Please email contact@bai.studio to request an account.'}), 403
 
@@ -253,6 +268,7 @@ def login():
 
 
 @app.route('/api/logout', methods=['POST'])
+@limiter.limit("3/minute")
 def logout():
     session.clear()
     return jsonify({'success': True})
@@ -260,6 +276,7 @@ def logout():
 
 @app.route('/api/user-data', methods=['GET'])
 @require_auth
+@limiter.limit("3/minute")
 def get_user_data():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -286,6 +303,7 @@ def get_user_data():
 
 @app.route('/api/admin/users', methods=['GET'])
 @require_admin
+@limiter.limit("3/minute")
 def get_all_users():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -305,6 +323,7 @@ def get_all_users():
 
 @app.route('/api/admin/ban-user', methods=['POST'])
 @require_admin
+@limiter.limit("3/minute")
 def ban_user():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -339,6 +358,7 @@ def ban_user():
 
 @app.route('/api/admin/unban-user', methods=['POST'])
 @require_admin
+@limiter.limit("3/minute")
 def unban_user():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -367,6 +387,7 @@ def unban_user():
 
 @app.route('/api/validate-cipher', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def validate_cipher_endpoint():
     data = request.get_json()
     cipher_input = data.get('cipher', '')
@@ -381,6 +402,7 @@ def validate_cipher_endpoint():
 
 @app.route('/api/decode', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def decode_endpoint():
     data = request.get_json()
 
@@ -404,6 +426,7 @@ def decode_endpoint():
 
 @app.route('/api/generate-cipher', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def generate_cipher_endpoint():
     try:
         cipher = create_random_cipher()
@@ -414,6 +437,7 @@ def generate_cipher_endpoint():
 
 @app.route('/api/encode', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def encode_endpoint():
     data = request.get_json()
 
@@ -436,6 +460,7 @@ def encode_endpoint():
 
 @app.route('/api/convert-base', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def convert_base_endpoint():
     data = request.get_json()
     number = data.get('number', '').strip()
@@ -462,6 +487,7 @@ def convert_base_endpoint():
 
 @app.route('/api/ascii-to-base', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def ascii_to_base_endpoint():
     data = request.get_json()
     text = data.get('text', '')
@@ -484,6 +510,7 @@ def ascii_to_base_endpoint():
 
 @app.route('/api/base-to-ascii', methods=['POST'])
 @require_auth
+@limiter.limit("3/minute")
 def base_to_ascii_endpoint():
     data = request.get_json()
     numbers = data.get('numbers', '').strip()

@@ -1,5 +1,7 @@
 Flask
 Flask-WTF
+Flask-Limiter
+redis
 gunicorn
 dotenv
 requests
