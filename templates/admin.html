@@ -9,33 +9,38 @@
     <style>
         .admin-container {
             max-width: 900px;
-            margin: 50px auto;
-            padding: 30px;
+            margin: 20px auto;
+            padding: 20px;
             background: var(--bg-secondary);
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .admin-container h2 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
         }
         .nav-header {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20px;
+            gap: 10px;
         }
         .nav-header a {
             color: var(--text-primary);
             text-decoration: none;
+            font-size: 0.9rem;
         }
         .users-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            font-size: 0.9rem;
         }
         .users-table th, .users-table td {
-            padding: 12px;
+            padding: 10px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
@@ -46,6 +51,28 @@
         .users-table tr:hover {
             background: var(--bg-primary);
         }
+        @media (max-width: 768px) {
+            .admin-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            .admin-container h2 {
+                font-size: 1.25rem;
+                margin-bottom: 15px;
+            }
+            .nav-header {
+                flex-direction: column;
+            }
+            .nav-header a {
+                font-size: 0.85rem;
+            }
+            .users-table {
+                font-size: 0.8rem;
+            }
+            .users-table th, .users-table td {
+                padding: 8px;
+            }
+        }
         .status-active {
             color: #28a745;
             font-weight: bold;
@@ -55,12 +82,13 @@
             font-weight: bold;
         }
         .btn {
-            padding: 8px 16px;
+            padding: 10px 16px;
             border: none;
             border-radius: 5px;
             font-size: 12px;
             cursor: pointer;
             transition: background-color 0.3s;
+            min-width: 60px;
         }
         .btn-danger {
             background: #dc3545;
@@ -79,6 +107,13 @@
         .btn-secondary {
             background: #6c757d;
             color: white;
+        }
+        @media (max-width: 768px) {
+            .btn {
+                padding: 12px 16px;
+                font-size: 13px;
+                min-width: 70px;
+            }
         }
         .error-message {
             background: #dc3545;
@@ -105,17 +140,22 @@
         }
         .ban-modal-content {
             background: var(--bg-secondary);
-            padding: 30px;
+            padding: 25px;
             border-radius: 10px;
             max-width: 400px;
             width: 90%;
         }
         .ban-modal-content h3 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        .ban-modal-content p {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
         }
         .ban-modal-content textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid var(--border-color);
             border-radius: 5px;
             background: var(--bg-primary);
@@ -123,11 +163,27 @@
             resize: vertical;
             min-height: 100px;
             margin-bottom: 20px;
+            font-family: inherit;
+            font-size: 14px;
         }
         .ban-modal-actions {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 480px) {
+            .ban-modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            .ban-modal-actions {
+                justify-content: stretch;
+            }
+            .ban-modal-actions button {
+                flex: 1;
+                min-width: 0;
+            }
         }
         .admin-badge {
             background: var(--primary-color);
