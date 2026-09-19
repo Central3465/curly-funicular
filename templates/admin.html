@@ -68,9 +68,41 @@
             }
             .users-table {
                 font-size: 0.8rem;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+            }
+            .users-table thead {
+                display: table;
+                width: 100%;
+            }
+            .users-table tbody {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .users-table tr {
+                display: table;
+                width: 100%;
+                table-layout: fixed;
             }
             .users-table th, .users-table td {
                 padding: 8px;
+                word-break: break-word;
+            }
+        }
+        @media (max-width: 480px) {
+            .users-table {
+                font-size: 0.7rem;
+            }
+            .users-table th, .users-table td {
+                padding: 6px;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 11px;
+                min-width: 50px;
             }
         }
         .status-active {

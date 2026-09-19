@@ -14,11 +14,14 @@
             padding: 10px 20px;
             background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .user-nav a {
             color: var(--text-primary);
             text-decoration: none;
             margin-left: 15px;
+            font-size: 0.95rem;
         }
         .user-nav a:hover {
             text-decoration: underline;
@@ -26,6 +29,52 @@
         .user-email {
             font-weight: 600;
             color: var(--primary-color);
+            font-size: 0.95rem;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .user-nav > div {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .user-nav {
+                padding: 8px 12px;
+                gap: 5px;
+            }
+            .user-nav a {
+                margin-left: 8px;
+                font-size: 0.85rem;
+            }
+            .user-email {
+                font-size: 0.85rem;
+                flex-basis: 100%;
+            }
+            .user-nav > div {
+                flex-basis: 100%;
+                gap: 5px;
+            }
+            .user-nav a {
+                margin-left: 0;
+            }
+        }
+        @media (max-width: 480px) {
+            .user-nav {
+                padding: 6px 10px;
+            }
+            .user-nav a {
+                font-size: 0.75rem;
+            }
+            .user-email {
+                font-size: 0.75rem;
+            }
+            .user-nav > div {
+                gap: 3px;
+            }
         }
     </style>
 </head>
