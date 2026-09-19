@@ -164,6 +164,26 @@
         color: var(--text-primary);
         margin-bottom: 15px;
       }
+      .faq-section {
+        margin: 20px 0;
+      }
+      .faq-section summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--primary-color);
+        padding: 10px;
+        background: var(--bg-primary);
+        border-radius: 5px;
+        border: 1px solid var(--border-color);
+        user-select: none;
+      }
+      .faq-section summary:hover {
+        opacity: 0.8;
+      }
+      .faq-section p {
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
     </style>
   </head>
   <body>
@@ -180,8 +200,18 @@
         If you have the <b>necessary permissions</b>, although using this
         website may not be a high priority, you're welcome to request an account
         by filling out the form below. Please ensure you send the email
-        from a <b>recognizable email address, explaining who you are.</b>
+        from a <b>recognisable email address, explaining who you are.</b>
       </p>
+
+      <details class="faq-section">
+        <summary>FAQ</summary>
+        <p>
+          <b>Q:</b> What are <b>necessary permissions</b>? <br />
+          <b>A:</b> You need to have the proper approval from the owner or by knowing them <b>personally</b>. <br />
+          <b>Q:</b> What is a <b>recognisable email address</b>? <br />
+          <b>A:</b> Your personal email address to which the owner can associate with you, in short any email domain that contains your name or a recognisable identifier. <br />
+        </p>
+      </details>
 
       <div class="ban-container" id="banContainer" style="display: none;">
         <h3>🚫 IP Address Banned</h3>
@@ -219,7 +249,7 @@
             id="description"
             name="description"
             required
-            placeholder="Briefly explain who you are and why you need access to this application..."
+            placeholder="Briefly explain who you are..."
           ></textarea>
         </div>
 
