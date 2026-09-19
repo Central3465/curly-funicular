@@ -2,6 +2,11 @@
 
 A Flask-based web application for encoding and decoding messages using custom substitution ciphers with decoy characters.
 
+> [!WARNING]
+> Running your own "instance" is **not recommended or supported**.
+>
+> Of course, there is a `README.md` file; however, not everything is documented. **Support will not be provided if you run into any issues.**
+
 ## Features
 
 - 🔐 **Custom Cipher Generation**: Create random substitution ciphers or use your own
