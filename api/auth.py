@@ -36,7 +36,7 @@ def login():
         return jsonify({'error': 'Invalid email or password'}), 401
 
     if user.get('banned'):
-        return jsonify({'error': 'Your account has been banned. Contact support for assistance.'}), 403
+        return jsonify({'error': 'Your account has been restricted.'}), 403
 
     if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
         record_failed_attempt(client_ip)
@@ -56,6 +56,7 @@ def login():
     clear_login_attempts(client_ip)
     session['user_id'] = str(user['_id'])
     session['email'] = user['email']
+    session['isAdmin'] = user.get('isAdmin', False)
 
     return jsonify({'success': True, 'message': 'Login successful'})
 

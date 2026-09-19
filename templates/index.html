@@ -35,7 +35,7 @@
         <span class="user-email">👤 {{ session.get('email', 'User') }}</span>
         <div>
             <a href="/settings">⚙️ Settings</a>
-            {% if session.get('email') == 'test@test.com' %}
+            {% if session.get('isAdmin', False) %}
             <a href="/admin">🛡️ Admin</a>
             {% endif %}
             <a href="#" onclick="logout(); return false;">🚪 Logout</a>
