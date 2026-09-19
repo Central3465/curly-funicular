@@ -480,6 +480,7 @@ def add_user():
     data = request.get_json()
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
+    isadmin = data.get('isAdmin', False)
 
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
@@ -495,7 +496,7 @@ def add_user():
     new_user = {
         'email': email,
         'password': hashed_password,
-        'isAdmin': False,
+        'isAdmin': isadmin,
         'created_at': datetime.now(),
         'banned': False
     }
