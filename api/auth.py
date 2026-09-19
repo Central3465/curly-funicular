@@ -19,7 +19,7 @@ def login():
         time_remaining = get_lockout_time_remaining(client_ip)
         return jsonify({
             'success': False,
-            'error': f'Too many failed attempts. Your IP is temporarily blocked for {time_remaining}. Please try again later.'
+            'error': f'Too many failed attempts. You are temporarily blocked for {time_remaining}. Please try again later.'
         }), 429
 
     data = request.get_json()
@@ -50,7 +50,7 @@ def login():
         else:
             time_remaining = get_lockout_time_remaining(client_ip)
             return jsonify({
-                'error': f'Too many failed attempts. Your IP is now blocked for {time_remaining}.'
+                'error': f'Too many failed attempts. You are now blocked for {time_remaining}.'
             }), 429
 
     clear_login_attempts(client_ip)

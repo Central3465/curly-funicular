@@ -337,7 +337,7 @@
           const banCheckData = await banCheckResponse.json();
 
           if (banCheckData.banned) {
-            errorMessage.textContent = 'Your IP address is banned. ' + banCheckData.remaining_time;
+            errorMessage.textContent = 'You are restricted from submitting account requests. ' + banCheckData.remaining_time;
             errorMessage.classList.add('show');
             return;
           }
