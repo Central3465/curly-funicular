@@ -25,7 +25,7 @@ REDIS_URL = os.getenv('REDIS_URL')
 if REDIS_URL:
     storage_uri = REDIS_URL
 else:
-    storage_uri = 'file:///tmp/flask_limiter'
+    storage_uri = 'memory://'
 
 limiter = Limiter(
     app=app,
