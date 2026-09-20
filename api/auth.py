@@ -8,7 +8,7 @@ from utils import require_auth
 
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
-    from app import users_collection, is_ip_blocked, get_lockout_time_remaining, record_failed_attempt, clear_login_attempts, get_client_ip, login_attempts, MAX_LOGIN_ATTEMPTS
+    from app import users_collection, is_ip_blocked, get_lockout_time_remaining, record_failed_attempt, clear_login_attempts, get_client_ip, get_login_attempt_count, MAX_LOGIN_ATTEMPTS
 
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -40,8 +40,8 @@ def login():
 
     if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
         record_failed_attempt(client_ip)
-        attempt_data = login_attempts[client_ip]
-        remaining_attempts = MAX_LOGIN_ATTEMPTS - attempt_data['count']
+        attempt_count = get_login_attempt_count(client_ip)
+        remaining_attempts = MAX_LOGIN_ATTEMPTS - attempt_count
 
         if remaining_attempts > 0:
             return jsonify({

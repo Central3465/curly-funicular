@@ -204,6 +204,34 @@ def unban_ip(ip):
     redis_client.delete(key)
 
 
+def get_login_attempt_count(ip):
+    if not redis_client:
+        return 0
+
+    key = f'login_attempts:{ip}'
+    attempt_data = redis_client.get(key)
+    if not attempt_data:
+        return 0
+
+    data = json.loads(attempt_data)
+    return data['count']
+
+
+def get_all_banned_ips():
+    if not redis_client:
+        return []
+
+    bans = []
+    pattern = 'banned_ips:*'
+    for key in redis_client.scan_iter(match=pattern):
+        ban_data = redis_client.get(key)
+        if ban_data:
+            data = json.loads(ban_data)
+            bans.append(data)
+
+    return bans
+
+
 def validate_email(email):
     if not email or len(email) > 254:
         return False

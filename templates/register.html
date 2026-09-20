@@ -190,37 +190,36 @@
     <div class="request-container">
       <h2>🔐 Request an Account</h2>
 
-      <div class="success-message" id="successMessage">
-        <strong>Success!</strong> Your email client will open with your details prefilled. Please check and send the email to complete your account request.
-      </div>
-
-      <div class="error-message" id="errorMessage"></div>
-
       <p>
         If you have the <b>necessary permissions</b>, although using this
         website may not be a high priority, you're welcome to request an account
-        by filling out the form below. Please ensure you send the email
-        from a <b>recognisable email address, explaining who you are.</b>
+        by filling out the form below. Please ensure you send the email from a
+        <b>recognisable email address, explaining who you are.</b>
       </p>
 
       <details class="faq-section">
         <summary>FAQ</summary>
         <p>
           <b>Q:</b> What are <b>necessary permissions</b>? <br />
-          <b>A:</b> You need to have the proper approval from the owner or by knowing them <b>personally</b>. <br />
+          <b>A:</b> You need to have the proper approval from the owner or by
+          knowing them <b>personally</b>. <br />
           <b>Q:</b> What is a <b>recognisable email address</b>? <br />
-          <b>A:</b> Your personal email address to which the owner can associate with you, in short any email domain that contains your name or a recognisable identifier. <br />
+          <b>A:</b> Your personal email address to which the owner can associate
+          with you, in short any email domain that contains your name or a
+          recognisable identifier. <br />
         </p>
       </details>
 
-      <div class="ban-container" id="banContainer" style="display: none;">
+      <div class="ban-container" id="banContainer" style="display: none">
         <h3>🚫 Access Restricted</h3>
-        <p>You have been temporarily restricted from submitting account requests.</p>
+        <p>
+          You have been temporarily restricted from submitting account requests.
+        </p>
         <div class="ban-time-remaining" id="banTimeRemaining"></div>
         <p>Please try again after the ban expires.</p>
       </div>
 
-      <form id="requestForm" style="display: block;">
+      <form id="requestForm" style="display: block">
         <div class="form-group">
           <label for="fullName">Full Name</label>
           <input
@@ -268,8 +267,18 @@
         </div>
 
         <div class="button-group">
-          <button type="submit" class="submit-btn" id="submitBtn">Submit Request</button>
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Submit Request
+          </button>
         </div>
+        <br>
+        <div class="success-message" id="successMessage">
+          <strong>Success!</strong> Your email client will open with your
+          details prefilled. Please check and send the email to complete your
+          account request.
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
       </form>
 
       <div class="auth-link">
@@ -282,127 +291,138 @@
 
       async function checkIPBan() {
         try {
-          const response = await fetch('/api/check-ip-ban');
+          const response = await fetch("/api/check-ip-ban");
           const data = await response.json();
 
           if (data.banned) {
-            document.getElementById('banContainer').style.display = 'block';
-            document.getElementById('banTimeRemaining').textContent = data.remaining_time;
-            document.getElementById('requestForm').style.display = 'none';
+            document.getElementById("banContainer").style.display = "block";
+            document.getElementById("banTimeRemaining").textContent =
+              data.remaining_time;
+            document.getElementById("requestForm").style.display = "none";
           }
         } catch (error) {
-          console.error('Error checking IP ban:', error);
+          console.error("Error checking IP ban:", error);
         }
       }
 
       function generateCaptcha() {
         const num1 = Math.floor(Math.random() * 20) + 1;
         const num2 = Math.floor(Math.random() * 20) + 1;
-        const operations = ['+', '-', '*'];
-        const operation = operations[Math.floor(Math.random() * operations.length)];
+        const operations = ["+", "-", "*"];
+        const operation =
+          operations[Math.floor(Math.random() * operations.length)];
 
         let answer;
         let questionText;
 
-        switch(operation) {
-          case '+':
+        switch (operation) {
+          case "+":
             answer = num1 + num2;
             questionText = `${num1} + ${num2} = ?`;
             break;
-          case '-':
+          case "-":
             answer = num1 - num2;
             questionText = `${num1} - ${num2} = ?`;
             break;
-          case '*':
+          case "*":
             answer = num1 * num2;
             questionText = `${num1} × ${num2} = ?`;
             break;
         }
 
         captchaCorrectAnswer = answer;
-        document.getElementById('captchaQuestion').textContent = questionText;
-        document.getElementById('captchaAnswer').value = '';
+        document.getElementById("captchaQuestion").textContent = questionText;
+        document.getElementById("captchaAnswer").value = "";
       }
 
-      document.getElementById('requestForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+      document
+        .getElementById("requestForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
 
-        const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        successMessage.classList.remove('show');
-        errorMessage.classList.remove('show');
+          const successMessage = document.getElementById("successMessage");
+          const errorMessage = document.getElementById("errorMessage");
+          successMessage.classList.remove("show");
+          errorMessage.classList.remove("show");
 
-        try {
-          const banCheckResponse = await fetch('/api/check-ip-ban');
-          const banCheckData = await banCheckResponse.json();
+          try {
+            const banCheckResponse = await fetch("/api/check-ip-ban");
+            const banCheckData = await banCheckResponse.json();
 
-          if (banCheckData.banned) {
-            errorMessage.textContent = 'You are restricted from submitting account requests. ' + banCheckData.remaining_time;
-            errorMessage.classList.add('show');
+            if (banCheckData.banned) {
+              errorMessage.textContent =
+                "You are restricted from submitting account requests. " +
+                banCheckData.remaining_time;
+              errorMessage.classList.add("show");
+              return;
+            }
+          } catch (error) {
+            console.error("Error checking IP ban:", error);
+          }
+
+          const fullName = document.getElementById("fullName").value.trim();
+          const email = document.getElementById("email").value.trim();
+          const description = document
+            .getElementById("description")
+            .value.trim();
+          const captchaAnswer = document
+            .getElementById("captchaAnswer")
+            .value.trim();
+          const submitBtn = document.getElementById("submitBtn");
+
+          if (!fullName || !email || !description || !captchaAnswer) {
+            errorMessage.textContent = "Please fill in all fields.";
+            errorMessage.classList.add("show");
             return;
           }
-        } catch (error) {
-          console.error('Error checking IP ban:', error);
-        }
 
-        const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const description = document.getElementById('description').value.trim();
-        const captchaAnswer = document.getElementById('captchaAnswer').value.trim();
-        const submitBtn = document.getElementById('submitBtn');
-
-        if (!fullName || !email || !description || !captchaAnswer) {
-          errorMessage.textContent = 'Please fill in all fields.';
-          errorMessage.classList.add('show');
-          return;
-        }
-
-        if (parseInt(captchaAnswer) !== captchaCorrectAnswer) {
-          errorMessage.textContent = 'Incorrect security verification answer. Please try again.';
-          errorMessage.classList.add('show');
-          generateCaptcha();
-          return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
-
-        try {
-          const response = await fetch('/api/request-account', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fullName,
-              email,
-              description
-            })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || 'Failed to submit request');
+          if (parseInt(captchaAnswer) !== captchaCorrectAnswer) {
+            errorMessage.textContent =
+              "Incorrect security verification answer. Please try again.";
+            errorMessage.classList.add("show");
+            generateCaptcha();
+            return;
           }
 
-          successMessage.classList.add('show');
-          document.getElementById('requestForm').style.display = 'none';
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Submitting...";
 
-          setTimeout(() => {
-            const mailtoLink = `mailto:central3465@gmail.com?subject=Account%20Request%20from%20${encodeURIComponent(fullName)}&body=${encodeURIComponent(
-              `Name: ${fullName}\nEmail: ${email}\n\n${description}`
-            )}`;
-            window.location.href = mailtoLink;
-          }, 1000);
+          try {
+            const response = await fetch("/api/request-account", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                fullName,
+                email,
+                description,
+              }),
+            });
 
-        } catch (error) {
-          errorMessage.textContent = error.message || 'An error occurred. Please try again.';
-          errorMessage.classList.add('show');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Submit Request';
-        }
-      });
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "Failed to submit request");
+            }
+
+            successMessage.classList.add("show");
+            document.getElementById("requestForm").style.display = "none";
+
+            setTimeout(() => {
+              const mailtoLink = `mailto:central3465@gmail.com?subject=Account%20Request%20from%20${encodeURIComponent(fullName)}&body=${encodeURIComponent(
+                `Name: ${fullName}\nEmail: ${email}\n\n${description}`,
+              )}`;
+              window.location.href = mailtoLink;
+            }, 1000);
+          } catch (error) {
+            errorMessage.textContent =
+              error.message || "An error occurred. Please try again.";
+            errorMessage.classList.add("show");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Request";
+          }
+        });
 
       generateCaptcha();
       checkIPBan();

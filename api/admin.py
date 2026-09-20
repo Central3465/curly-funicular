@@ -191,15 +191,7 @@ def unban_ip_endpoint():
 @admin_bp.route('/api/admin/banned-ips', methods=['GET'])
 @require_admin
 def get_banned_ips():
-    from app import banned_ips
+    from app import get_all_banned_ips
 
-    bans = []
-    for ip, ban_data in banned_ips.items():
-        bans.append({
-            'ip_address': ip,
-            'reason': ban_data['reason'],
-            'banned_at': ban_data['banned_at'].isoformat(),
-            'expires_at': ban_data['expires_at'].isoformat()
-        })
-
+    bans = get_all_banned_ips()
     return jsonify({'banned_ips': bans})
