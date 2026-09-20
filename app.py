@@ -229,7 +229,6 @@ app.register_blueprint(csrf_bp)
 
 csrf_exempt_routes = [
     'auth.login',
-    'auth.logout',
     'cipher.validate_cipher_endpoint',
     'cipher.decode_endpoint',
     'cipher.generate_cipher_endpoint',
@@ -237,15 +236,9 @@ csrf_exempt_routes = [
     'conversion.convert_base_endpoint',
     'conversion.ascii_to_base_endpoint',
     'conversion.base_to_ascii_endpoint',
-    'account.request_account',
     'account.check_ip_ban',
     'csrf.get_csrf_token',
     'admin.get_all_users',
-    'admin.ban_user',
-    'admin.unban_user',
-    'admin.add_user',
-    'admin.ban_ip_endpoint',
-    'admin.unban_ip_endpoint',
     'admin.get_banned_ips',
 ]
 
