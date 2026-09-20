@@ -3,7 +3,16 @@ from functools import wraps
 from datetime import datetime
 from bson.objectid import ObjectId
 import bcrypt
+import ipaddress
 from api import admin_bp
+
+
+def is_valid_ip(ip_str):
+    try:
+        ipaddress.ip_address(ip_str)
+        return True
+    except ValueError:
+        return False
 
 
 def require_admin(f):
@@ -162,6 +171,9 @@ def ban_ip_endpoint():
     if not ip_address:
         return jsonify({'error': 'IP address is required'}), 400
 
+    if not is_valid_ip(ip_address):
+        return jsonify({'error': 'Invalid IP address format'}), 400
+
     try:
         duration = int(duration)
         if duration < 1:
@@ -183,6 +195,9 @@ def unban_ip_endpoint():
 
     if not ip_address:
         return jsonify({'error': 'IP address is required'}), 400
+
+    if not is_valid_ip(ip_address):
+        return jsonify({'error': 'Invalid IP address format'}), 400
 
     unban_ip(ip_address)
     return jsonify({'success': True, 'message': f'IP {ip_address} has been unbanned'})
