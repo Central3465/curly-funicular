@@ -15,6 +15,14 @@ def request_account():
     description = data.get('description', '').strip()
     client_ip = get_client_ip()
 
+    is_banned, remaining = is_ip_banned(client_ip)
+    if is_banned:
+        hours = int(remaining.total_seconds() // 3600)
+        minutes = int((remaining.total_seconds() % 3600) // 60)
+        return jsonify({
+            'error': f'This IP address has been banned. Please try again in {hours}h {minutes}m.'
+        }), 429
+
     if not full_name or not email or not description:
         return jsonify({'error': 'All fields are required'}), 400
 
