@@ -7,9 +7,11 @@ from dotenv import load_dotenv
 from functools import wraps
 from datetime import datetime, timedelta
 import re
+import json
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from bson.objectid import ObjectId
+import redis
 
 load_dotenv()
 
@@ -44,15 +46,19 @@ except ConnectionFailure as e:
     db = None
     users_collection = None
 
-login_attempts = {}
+# Redis connection for security tracking
+try:
+    redis_client = redis.from_url(REDIS_URL) if REDIS_URL else redis.Redis(decode_responses=True)
+    redis_client.ping()
+except Exception as e:
+    print(f"Failed to connect to Redis: {e}")
+    redis_client = None
+
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION = timedelta(hours=24)
 
-access_requests = {}
 ACCESS_REQUEST_LIMIT = 1
 ACCESS_REQUEST_WINDOW = timedelta(minutes=1)
-
-banned_ips = {}
 
 
 def get_client_ip():
@@ -62,26 +68,30 @@ def get_client_ip():
 
 
 def is_ip_blocked(ip):
-    if ip not in login_attempts:
+    if not redis_client:
         return False
 
-    attempt_data = login_attempts[ip]
-    last_attempt_time = attempt_data['last_attempt']
-    failed_count = attempt_data['count']
-
-    # Reset if 24 hours have passed
-    if datetime.now() - last_attempt_time > LOCKOUT_DURATION:
-        del login_attempts[ip]
+    key = f'login_attempts:{ip}'
+    attempt_data = redis_client.get(key)
+    if not attempt_data:
         return False
 
+    data = json.loads(attempt_data)
+    failed_count = data['count']
     return failed_count >= MAX_LOGIN_ATTEMPTS
 
 
 def get_lockout_time_remaining(ip):
-    if ip not in login_attempts:
+    if not redis_client:
         return None
 
-    last_attempt_time = login_attempts[ip]['last_attempt']
+    key = f'login_attempts:{ip}'
+    attempt_data = redis_client.get(key)
+    if not attempt_data:
+        return None
+
+    data = json.loads(attempt_data)
+    last_attempt_time = datetime.fromisoformat(data['last_attempt'])
     lockout_end = last_attempt_time + LOCKOUT_DURATION
     remaining = lockout_end - datetime.now()
 
@@ -93,49 +103,77 @@ def get_lockout_time_remaining(ip):
 
 
 def record_failed_attempt(ip):
-    if ip in login_attempts:
-        login_attempts[ip]['count'] += 1
-        login_attempts[ip]['last_attempt'] = datetime.now()
+    if not redis_client:
+        return
+
+    key = f'login_attempts:{ip}'
+    attempt_data = redis_client.get(key)
+
+    if attempt_data:
+        data = json.loads(attempt_data)
+        data['count'] += 1
+        data['last_attempt'] = datetime.now().isoformat()
     else:
-        login_attempts[ip] = {
+        data = {
             'count': 1,
-            'last_attempt': datetime.now()
+            'last_attempt': datetime.now().isoformat()
         }
+
+    redis_client.setex(key, int(LOCKOUT_DURATION.total_seconds()), json.dumps(data))
 
 
 def clear_login_attempts(ip):
-    if ip in login_attempts:
-        del login_attempts[ip]
+    if not redis_client:
+        return
+
+    key = f'login_attempts:{ip}'
+    redis_client.delete(key)
 
 
 def can_make_access_request(ip):
-    if ip not in access_requests:
+    if not redis_client:
         return True, None
 
-    last_request_time = access_requests[ip]
+    key = f'access_requests:{ip}'
+    last_request_data = redis_client.get(key)
+
+    if not last_request_data:
+        return True, None
+
+    last_request_time = datetime.fromisoformat(last_request_data)
     time_since_last_request = datetime.now() - last_request_time
 
     if time_since_last_request < ACCESS_REQUEST_WINDOW:
         wait_time = int((ACCESS_REQUEST_WINDOW - time_since_last_request).total_seconds())
         return False, wait_time
     else:
-        del access_requests[ip]
+        redis_client.delete(key)
         return True, None
 
 
 def record_access_request(ip):
-    access_requests[ip] = datetime.now()
+    if not redis_client:
+        return
+
+    key = f'access_requests:{ip}'
+    redis_client.setex(key, int(ACCESS_REQUEST_WINDOW.total_seconds()), datetime.now().isoformat())
 
 
 def is_ip_banned(ip):
-    if ip not in banned_ips:
+    if not redis_client:
         return False, None
 
-    ban_data = banned_ips[ip]
-    expires_at = ban_data['expires_at']
+    key = f'banned_ips:{ip}'
+    ban_data = redis_client.get(key)
+
+    if not ban_data:
+        return False, None
+
+    data = json.loads(ban_data)
+    expires_at = datetime.fromisoformat(data['expires_at'])
 
     if datetime.now() > expires_at:
-        del banned_ips[ip]
+        redis_client.delete(key)
         return False, None
 
     remaining = expires_at - datetime.now()
@@ -143,18 +181,27 @@ def is_ip_banned(ip):
 
 
 def ban_ip(ip, duration_hours, reason=''):
+    if not redis_client:
+        return
+
     expires_at = datetime.now() + timedelta(hours=duration_hours)
-    banned_ips[ip] = {
+    ban_data = {
         'ip_address': ip,
         'reason': reason,
-        'banned_at': datetime.now(),
-        'expires_at': expires_at
+        'banned_at': datetime.now().isoformat(),
+        'expires_at': expires_at.isoformat()
     }
+
+    key = f'banned_ips:{ip}'
+    redis_client.setex(key, int(timedelta(hours=duration_hours).total_seconds()), json.dumps(ban_data))
 
 
 def unban_ip(ip):
-    if ip in banned_ips:
-        del banned_ips[ip]
+    if not redis_client:
+        return
+
+    key = f'banned_ips:{ip}'
+    redis_client.delete(key)
 
 
 def validate_email(email):
