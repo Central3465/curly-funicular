@@ -1,7 +1,7 @@
 """Unit tests for authentication API endpoints."""
 import unittest
 import json
-from app import app, users_collection, login_attempts, access_requests, limiter
+from app import app, users_collection, redis_client, limiter
 import bcrypt
 import pymongo
 
@@ -15,9 +15,12 @@ class TestAuthAPI(unittest.TestCase):
         limiter.enabled = False
         self.client = self.app.test_client()
 
-        # Clear login attempts and access requests
-        login_attempts.clear()
-        access_requests.clear()
+        # Clear Redis data
+        if redis_client:
+            for key in redis_client.scan_iter(match="login_attempts:*"):
+                redis_client.delete(key)
+            for key in redis_client.scan_iter(match="access_requests:*"):
+                redis_client.delete(key)
 
         # Skip if database is not available
         if users_collection is None:
@@ -25,8 +28,11 @@ class TestAuthAPI(unittest.TestCase):
 
     def tearDown(self):
         """Clean up after tests."""
-        login_attempts.clear()
-        access_requests.clear()
+        if redis_client:
+            for key in redis_client.scan_iter(match="login_attempts:*"):
+                redis_client.delete(key)
+            for key in redis_client.scan_iter(match="access_requests:*"):
+                redis_client.delete(key)
 
     def test_register_disabled(self):
         """Test that registration returns 403."""
@@ -165,12 +171,16 @@ class TestLoginFlow(unittest.TestCase):
             'banned': False
         })
 
-        login_attempts.clear()
+        if redis_client:
+            for key in redis_client.scan_iter(match="login_attempts:*"):
+                redis_client.delete(key)
 
     def tearDown(self):
         """Clean up test user."""
         users_collection.delete_one({'email': self.email})
-        login_attempts.clear()
+        if redis_client:
+            for key in redis_client.scan_iter(match="login_attempts:*"):
+                redis_client.delete(key)
 
     def test_successful_login(self):
         """Test successful login."""
