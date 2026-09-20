@@ -276,4 +276,4 @@ for route in rate_limited_routes:
     limiter.limit("3/minute")(app.view_functions[route])
 
 if __name__ == '__main__':
-    app.run(debug=os.getenv('DEBUG', 'True').lower() in ['true', '1', 't'])
+    app.run(debug=os.getenv('DEBUG', 'false').lower() in ['true', '1', 't'])
