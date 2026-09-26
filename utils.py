@@ -18,7 +18,7 @@ def track_usage(f):
     def decorated_function(*args, **kwargs):
         from app import users_collection
 
-        if not session.get('user_id') or not users_collection:
+        if not session.get('user_id') or users_collection is None:
             return f(*args, **kwargs)
 
         user_id = session.get('user_id')
@@ -43,7 +43,7 @@ def track_usage(f):
 def initialize_usage_limits(user_id):
     from app import users_collection
 
-    if not users_collection:
+    if users_collection is None:
         return
 
     now = datetime.now()
@@ -72,7 +72,7 @@ def initialize_usage_limits(user_id):
 def get_usage_limits(user_id):
     from app import users_collection
 
-    if not users_collection:
+    if users_collection is None:
         return None
 
     user = users_collection.find_one({'_id': ObjectId(user_id)})
@@ -155,7 +155,7 @@ def check_usage_limits(user_id):
 def increment_usage(user_id):
     from app import users_collection
 
-    if not users_collection:
+    if users_collection is None:
         return
 
     limits = get_usage_limits(user_id)
