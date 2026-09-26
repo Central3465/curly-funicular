@@ -91,7 +91,7 @@ def get_usage_limits(user_id):
 
     session_limit = usage_limits.get('session_limit', {})
     if isinstance(session_limit.get('reset_at'), str):
-        session_limit['reset_at'] = datetime.fromisoformat(session_limit['reset_at'])
+        session_limit['reset_at'] = datetime.fromisoformat(session_limit['reset_at']).replace(tzinfo=None)
 
     if session_limit.get('reset_at') and now >= session_limit.get('reset_at'):
         session_limit['count'] = 0
@@ -100,7 +100,7 @@ def get_usage_limits(user_id):
 
     weekly_limit = usage_limits.get('weekly_limit', {})
     if isinstance(weekly_limit.get('reset_at'), str):
-        weekly_limit['reset_at'] = datetime.fromisoformat(weekly_limit['reset_at'])
+        weekly_limit['reset_at'] = datetime.fromisoformat(weekly_limit['reset_at']).replace(tzinfo=None)
 
     if weekly_limit.get('reset_at') and now >= weekly_limit.get('reset_at'):
         weekly_limit['count'] = 0
@@ -131,7 +131,7 @@ def check_usage_limits(user_id):
     if session_exceeded:
         reset_at = session_limit.get('reset_at')
         if isinstance(reset_at, str):
-            reset_at = datetime.fromisoformat(reset_at)
+            reset_at = datetime.fromisoformat(reset_at).replace(tzinfo=None)
         remaining = reset_at - datetime.now()
         minutes = int(remaining.total_seconds() / 60)
         hours = minutes // 60
@@ -141,7 +141,7 @@ def check_usage_limits(user_id):
     if weekly_exceeded:
         reset_at = weekly_limit.get('reset_at')
         if isinstance(reset_at, str):
-            reset_at = datetime.fromisoformat(reset_at)
+            reset_at = datetime.fromisoformat(reset_at).replace(tzinfo=None)
         remaining = reset_at - datetime.now()
         days = remaining.days
         minutes = int(remaining.total_seconds() % 86400 / 60)
