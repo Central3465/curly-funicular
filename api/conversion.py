@@ -1,12 +1,17 @@
-from flask import jsonify, request
+from flask import jsonify, request, session
 from cipher import convert_base, ascii_to_base, base_to_ascii
 from api import conversion_bp
-from utils import require_auth
+from utils import require_auth, track_usage, check_usage_limits
 
 
 @conversion_bp.route('/api/convert-base', methods=['POST'])
 @require_auth
+@track_usage
 def convert_base_endpoint():
+    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    if not can_proceed:
+        return jsonify({'error': error_msg}), 429
+
     data = request.get_json()
     number = data.get('number', '').strip()
     from_base = data.get('from_base')
@@ -32,7 +37,12 @@ def convert_base_endpoint():
 
 @conversion_bp.route('/api/ascii-to-base', methods=['POST'])
 @require_auth
+@track_usage
 def ascii_to_base_endpoint():
+    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    if not can_proceed:
+        return jsonify({'error': error_msg}), 429
+
     data = request.get_json()
     text = data.get('text', '')
     base = data.get('base')
@@ -54,7 +64,12 @@ def ascii_to_base_endpoint():
 
 @conversion_bp.route('/api/base-to-ascii', methods=['POST'])
 @require_auth
+@track_usage
 def base_to_ascii_endpoint():
+    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    if not can_proceed:
+        return jsonify({'error': error_msg}), 429
+
     data = request.get_json()
     numbers = data.get('numbers', '').strip()
     base = data.get('base')

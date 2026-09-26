@@ -121,6 +121,7 @@ def unban_user():
 @require_admin
 def add_user():
     from app import users_collection, validate_email
+    from utils import initialize_usage_limits
 
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -151,6 +152,7 @@ def add_user():
 
     try:
         result = users_collection.insert_one(new_user)
+        initialize_usage_limits(str(result.inserted_id))
         return jsonify({'success': True, 'message': 'User added successfully', 'user_id': str(result.inserted_id)})
     except Exception as e:
         if 'duplicate' in str(e).lower():

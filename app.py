@@ -293,7 +293,7 @@ def admin_page():
 
 
 
-from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp
+from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
@@ -301,6 +301,7 @@ app.register_blueprint(cipher_bp)
 app.register_blueprint(conversion_bp)
 app.register_blueprint(account_bp)
 app.register_blueprint(csrf_bp)
+app.register_blueprint(usage_bp)
 
 csrf_exempt_routes = [
     'auth.login',
@@ -328,6 +329,7 @@ rate_limited_routes = [
     'conversion.ascii_to_base_endpoint',
     'conversion.base_to_ascii_endpoint',
     'account.request_account',
+    'usage.get_usage',
     'admin.get_all_users',
     'admin.ban_user',
     'admin.unban_user',
