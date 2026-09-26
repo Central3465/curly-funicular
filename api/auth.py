@@ -97,8 +97,18 @@ def get_user_data():
     else:
         created_at = 'Unknown'
 
+    tier = user.get('tier', 0)
+    tier_names = {
+        0: 'Default',
+        1: 'Trusted',
+        2: 'Pro',
+        3: 'Superuser'
+    }
+
     return jsonify({
         'email': user['email'],
         'created_at': created_at,
-        'banned': user.get('banned', False)
+        'banned': user.get('banned', False),
+        'tier': tier,
+        'tier_name': tier_names.get(tier, 'Unknown')
     })

@@ -34,6 +34,7 @@ try:
         'email': admin_email,
         'password': hashed_password,
         'isAdmin': True,
+        'tier': 3,  # Superuser tier for admin
         'created_at': datetime.now(),
         'banned': False
     }

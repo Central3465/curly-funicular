@@ -4,6 +4,38 @@ from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 
 
+# Tier constants
+TIER_DEFAULT = 0
+TIER_TRUSTED = 1
+TIER_PRO = 2
+TIER_SUPERUSER = 3
+
+# Base limits for default tier (0)
+BASE_SESSION_LIMIT = 100
+BASE_WEEKLY_LIMIT = 500
+
+# Tier multipliers
+TIER_MULTIPLIERS = {
+    TIER_DEFAULT: 1.0,
+    TIER_TRUSTED: 1.5,
+    TIER_PRO: 2.0,
+    TIER_SUPERUSER: float('inf')  # unlimited
+}
+
+
+def get_tier_limits(tier):
+    """Get session and weekly limits based on user tier."""
+    multiplier = TIER_MULTIPLIERS.get(tier, 1.0)
+
+    if tier == TIER_SUPERUSER:
+        return float('inf'), float('inf')
+
+    session_limit = int(BASE_SESSION_LIMIT * multiplier)
+    weekly_limit = int(BASE_WEEKLY_LIMIT * multiplier)
+
+    return session_limit, weekly_limit
+
+
 def require_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -46,6 +78,13 @@ def initialize_usage_limits(user_id):
     if users_collection is None:
         return
 
+    user = users_collection.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        return
+
+    tier = user.get('tier', TIER_DEFAULT)
+    session_limit_max, weekly_limit_max = get_tier_limits(tier)
+
     now = datetime.now()
     session_reset = now + timedelta(hours=5)
     weekly_reset = now + timedelta(days=7)
@@ -54,12 +93,12 @@ def initialize_usage_limits(user_id):
         'session_limit': {
             'count': 0,
             'reset_at': session_reset,
-            'max': 100
+            'max': session_limit_max if session_limit_max != float('inf') else 999999
         },
         'weekly_limit': {
             'count': 0,
             'reset_at': weekly_reset,
-            'max': 500
+            'max': weekly_limit_max if weekly_limit_max != float('inf') else 999999
         }
     }
 
@@ -86,6 +125,11 @@ def get_usage_limits(user_id):
         initialize_usage_limits(user_id)
         return get_usage_limits(user_id)
 
+    tier = user.get('tier', TIER_DEFAULT)
+    session_limit_max, weekly_limit_max = get_tier_limits(tier)
+    session_limit_max = session_limit_max if session_limit_max != float('inf') else 999999
+    weekly_limit_max = weekly_limit_max if weekly_limit_max != float('inf') else 999999
+
     now = datetime.now()
     needs_reset = False
 
@@ -105,6 +149,12 @@ def get_usage_limits(user_id):
     if weekly_limit.get('reset_at') and now >= weekly_limit.get('reset_at'):
         weekly_limit['count'] = 0
         weekly_limit['reset_at'] = now + timedelta(days=7)
+        needs_reset = True
+
+    # Update max limits if tier has changed
+    if session_limit.get('max') != session_limit_max or weekly_limit.get('max') != weekly_limit_max:
+        session_limit['max'] = session_limit_max
+        weekly_limit['max'] = weekly_limit_max
         needs_reset = True
 
     if needs_reset:

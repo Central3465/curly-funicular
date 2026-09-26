@@ -121,7 +121,7 @@ def unban_user():
 @require_admin
 def add_user():
     from app import users_collection, validate_email
-    from utils import initialize_usage_limits
+    from utils import initialize_usage_limits, TIER_DEFAULT, TIER_TRUSTED, TIER_PRO, TIER_SUPERUSER
 
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
@@ -130,6 +130,7 @@ def add_user():
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
     isadmin = data.get('isAdmin', False)
+    tier = data.get('tier', TIER_DEFAULT)
 
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
@@ -140,12 +141,16 @@ def add_user():
     if len(password) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
+    if tier not in [TIER_DEFAULT, TIER_TRUSTED, TIER_PRO, TIER_SUPERUSER]:
+        return jsonify({'error': 'Invalid tier'}), 400
+
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     new_user = {
         'email': email,
         'password': hashed_password,
         'isAdmin': isadmin,
+        'tier': tier,
         'created_at': datetime.now(),
         'banned': False
     }
@@ -203,6 +208,45 @@ def unban_ip_endpoint():
 
     unban_ip(ip_address)
     return jsonify({'success': True, 'message': f'IP {ip_address} has been unbanned'})
+
+
+@admin_bp.route('/api/admin/update-tier', methods=['POST'])
+@require_admin
+def update_tier():
+    from app import users_collection
+    from utils import TIER_DEFAULT, TIER_TRUSTED, TIER_PRO, TIER_SUPERUSER
+
+    if users_collection is None:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    data = request.get_json()
+    user_id = data.get('user_id')
+    tier = data.get('tier')
+
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    if tier is None or tier not in [TIER_DEFAULT, TIER_TRUSTED, TIER_PRO, TIER_SUPERUSER]:
+        return jsonify({'error': 'Invalid tier'}), 400
+
+    try:
+        object_id = ObjectId(user_id)
+    except Exception:
+        return jsonify({'error': 'Invalid user ID format'}), 400
+
+    user = users_collection.find_one({'_id': object_id})
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    result = users_collection.update_one(
+        {'_id': object_id},
+        {'$set': {'tier': tier}}
+    )
+
+    if result.modified_count == 0:
+        return jsonify({'error': 'Failed to update tier'}), 500
+
+    return jsonify({'success': True, 'message': f'User tier updated to {tier}'})
 
 
 @admin_bp.route('/api/admin/banned-ips', methods=['GET'])

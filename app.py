@@ -334,6 +334,7 @@ rate_limited_routes = [
     'admin.ban_user',
     'admin.unban_user',
     'admin.add_user',
+    'admin.update_tier',
     'admin.ban_ip_endpoint',
     'admin.unban_ip_endpoint',
     'admin.get_banned_ips',

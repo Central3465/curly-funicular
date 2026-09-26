@@ -322,6 +322,7 @@
             <div class="user-info">
                 <p><strong>Email:</strong> <span id="user-email"></span></p>
                 <p><strong>Account Created:</strong> <span id="user-created-at"></span></p>
+                <p><strong>Account Tier:</strong> <span id="user-tier"></span></p>
                 <p><strong>Status:</strong> <span id="user-status"></span></p>
             </div>
 
@@ -479,6 +480,7 @@
                 document.getElementById('user-info-section').style.display = 'block';
                 document.getElementById('user-email').textContent = data.email;
                 document.getElementById('user-created-at').textContent = data.created_at;
+                document.getElementById('user-tier').textContent = data.tier_name || 'Unknown';
 
                 const statusSpan = document.getElementById('user-status');
                 if (data.banned) {
