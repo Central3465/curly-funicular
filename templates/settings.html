@@ -5,206 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <title>Account Settings - Cipher App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        .settings-container {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background: var(--bg-light);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        .settings-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-        .user-info {
-            background: var(--bg-white);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .user-info p {
-            margin: 12px 0;
-            font-size: 0.95rem;
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #faf7f2;     
+            color: #1e1e1e;
             line-height: 1.5;
+            padding: 16px;
         }
-        .user-info strong {
-            color: var(--primary-color);
-            display: inline-block;
-            min-width: 120px;
-        }
-        @media (max-width: 768px) {
-            .settings-container {
-                margin: 10px;
-                padding: 15px;
-            }
-            .settings-container h2 {
-                font-size: 1.25rem;
-                margin-bottom: 15px;
-            }
-            .user-info {
-                padding: 15px;
-            }
-            .user-info p {
-                font-size: 0.9rem;
-            }
-        }
-        .btn {
-            padding: 12px 24px;
+
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0;
+            background: transparent;
             border: none;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .nav-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 24px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0d6cc;
+        }
+
+        .nav-header h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 0;
+            text-align: left;
+            color: #1e1e1e;
+        }
+
+        .nav-header a {
+            color: #d9730d;          
+            text-decoration: underline;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .nav-header a:visited {
+            color: #b35f00;
+        }
+
+        .error-message,
+        .success-message {
+            padding: 10px 12px;
+            border: 1px solid #e0d6cc;
+            background: #fff8f0;      
+            color: #1e1e1e;
+            border-radius: 0;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .loading {
+            padding: 24px 0;
+            text-align: left;
+            font-size: 1rem;
+            color: #5a4a3a;
+        }
+
+        .user-info {
+            background: transparent;
+            padding: 0 0 16px 0;
+            border: none;
+            border-bottom: 1px solid #e0d6cc;
+            border-radius: 0;
+            margin-bottom: 24px;
+        }
+
+        .user-info p {
+            margin: 8px 0;
+            font-size: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .user-info strong {
+            color: #1e1e1e;
+            font-weight: 600;
+            min-width: 140px;
+            display: inline-block;
+        }
+
+        .usage-limits-section {
+            background: transparent;
+            padding: 0 0 16px 0;
+            border: none;
+            border-bottom: 1px solid #e0d6cc;
+            border-radius: 0;
+            margin-bottom: 24px;
+        }
+
+        .usage-limits-section h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: #1e1e1e;
+        }
+
+        .limit-item {
+            margin-bottom: 24px;
+        }
+
+        .limit-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .limit-label {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .limit-label strong {
+            font-weight: 600;
+            color: #1e1e1e;
+        }
+
+        .limit-stats {
+            color: #5a4a3a;
+            font-size: 0.95rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #f0e8e0;       
+            border: 1px solid #d6c6b8;
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #d9730d;        
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: width 0.2s ease;
+            min-width: 30px;
+            border-radius: 0;
+        }
+
+        /* slightly deeper for visibility */
+        .progress-fill.warning {
+            background: #e07b1a;
+        }
+
+        .progress-fill.danger {
+            background: #c45a00;
+        }
+
+        .reset-time {
+            font-size: 0.9rem;
+            color: #5a4a3a;
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: 1px solid #d9730d;   
+            border-radius: 0;
+            font-size: 1rem;
+            font-family: inherit;
+            background: #fff4e8;       
+            color: #1e1e1e;
             cursor: pointer;
-            transition: background-color 0.3s;
-            margin-right: 10px;
+            text-align: center;
+            line-height: 1.2;
+            margin-right: 12px;
+            transition: background 0.15s;
             touch-action: manipulation;
         }
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
+
+        .btn:hover {
+            background: #ffe8d4;
+            border-color: #b35f00;
         }
-        .btn-primary:hover {
-            background: var(--primary-hover);
-        }
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
+
+        .btn-primary,
+        .btn-secondary,
         .btn-danger {
-            background: #dc3545;
-            color: white;
+            background: #fff4e8;
+            color: #1e1e1e;
+            border: 1px solid #d9730d;
         }
+
+        .btn-primary:hover,
+        .btn-secondary:hover,
         .btn-danger:hover {
-            background: #c82333;
+            background: #ffe8d4;
         }
-        @media (max-width: 768px) {
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .nav-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .nav-header h2 {
+                font-size: 1.4rem;
+            }
+
+            .user-info p {
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .user-info strong {
+                min-width: auto;
+                display: block;
+            }
+
+            .limit-label {
+                flex-direction: column;
+                gap: 2px;
+            }
+
             .btn {
-                padding: 14px 20px;
-                font-size: 15px;
                 display: block;
                 width: 100%;
                 margin-right: 0;
                 margin-bottom: 10px;
+                padding: 12px 16px;
             }
-        }
-        .error-message {
-            background: #dc3545;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-        .success-message {
-            background: #28a745;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-        .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-        .nav-header a {
-            color: var(--text-primary);
-            text-decoration: none;
-            white-space: nowrap;
-            font-size: 0.9rem;
-        }
-        .nav-header a:hover {
-            text-decoration: underline;
-        }
-        @media (max-width: 768px) {
-            .nav-header {
-                flex-direction: column;
-                align-items: flex-start;
+
+            .btn:last-child {
+                margin-bottom: 0;
             }
-            .nav-header a {
-                font-size: 0.85rem;
-            }
-        }
-        .usage-limits-section {
-            background: var(--bg-white);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .usage-limits-section h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-        }
-        .limit-item {
-            margin-bottom: 20px;
-        }
-        .limit-item:last-child {
-            margin-bottom: 0;
-        }
-        .limit-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-        .limit-label strong {
-            color: var(--primary-color);
-        }
-        .limit-stats {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 24px;
-            background: var(--bg-light);
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            transition: width 0.3s ease;
-            min-width: 30px;
-        }
-        .progress-fill.warning {
-            background: linear-gradient(90deg, #ff9800, #f57c00);
-        }
-        .progress-fill.danger {
-            background: linear-gradient(90deg, #ef4444, #dc2626);
-        }
-        .reset-time {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
         }
     </style>
 </head>
 <body>
     <div class="settings-container">
         <div class="nav-header">
-            <h2>⚙️ Account Settings</h2>
+            <h2>Account Settings</h2>
             <a href="/">← Back to App</a>
         </div>
         
@@ -221,7 +283,7 @@
             </div>
 
             <div class="usage-limits-section">
-                <h3>📊 Usage Limits</h3>
+                <h3>Usage Limits</h3>
 
                 <div class="limit-item">
                     <div class="limit-label">
@@ -377,11 +439,9 @@
 
                 const statusSpan = document.getElementById('user-status');
                 if (data.banned) {
-                    statusSpan.textContent = 'Banned ⚠️';
-                    statusSpan.style.color = 'var(--error-color)';
+                    statusSpan.textContent = 'Banned';
                 } else {
-                    statusSpan.textContent = 'Active ✓';
-                    statusSpan.style.color = 'var(--success-color)';
+                    statusSpan.textContent = 'Active';
                 }
 
                 await loadUsageLimits();
