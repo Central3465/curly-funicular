@@ -209,36 +209,6 @@
             document.getElementById("confirmPassword").value;
           const submitBtn = document.getElementById("submitBtn");
 
-          if (!fullName || !email || !password || !confirmPassword) {
-            errorMessage.textContent = "Please fill in all fields.";
-            errorMessage.classList.add("show");
-            return;
-          }
-
-          if (password !== confirmPassword) {
-            errorMessage.textContent = "Passwords do not match.";
-            errorMessage.classList.add("show");
-            return;
-          }
-
-          if (password.length < 8) {
-            errorMessage.textContent =
-              "Password must be at least 8 characters long.";
-            errorMessage.classList.add("show");
-            return;
-          }
-
-          const validDomains = ["@bai.studio", "@travelut.app"];
-          const hasValidDomain = validDomains.some((domain) =>
-            email.endsWith(domain),
-          );
-          if (!hasValidDomain) {
-            errorMessage.textContent =
-              "No permissions.";
-            errorMessage.classList.add("show");
-            return;
-          }
-
           submitBtn.disabled = true;
           submitBtn.textContent = "Registering...";
 
@@ -252,6 +222,7 @@
                 fullName,
                 email,
                 password,
+                confirmPassword,
               }),
             });
 

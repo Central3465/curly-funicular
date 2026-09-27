@@ -43,19 +43,23 @@ def register():
     full_name = data.get('fullName', '').strip()
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
+    confirm_password = data.get('confirmPassword', '')
 
-    if not full_name or not email or not password:
+    if not full_name or not email or not password or not confirm_password:
         return jsonify({'error': 'All fields are required'}), 400
+
+    if password != confirm_password:
+        return jsonify({'error': 'Passwords do not match'}), 400
+
+    if len(password) < 8:
+        return jsonify({'error': 'Password must be at least 8 characters long'}), 400
 
     if not validate_email(email):
         return jsonify({'error': 'Invalid email address'}), 400
 
     valid_domains = ['@bai.studio', '@travelut.app']
     if not any(email.endswith(domain) for domain in valid_domains):
-        return jsonify({'error': 'Email must end with @bai.studio or @travelut.app'}), 400
-
-    if len(password) < 8:
-        return jsonify({'error': 'Password must be at least 8 characters'}), 400
+        return jsonify({'error': 'No permissions'}), 400
 
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'Email already registered'}), 409
