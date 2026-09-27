@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_mail import Mail
 import os
 from dotenv import load_dotenv
 from functools import wraps
@@ -18,6 +19,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 csrf = CSRFProtect(app)
+
+# Configure Flask-Mail
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.hostinger.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 465))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'false').lower() in ['true', '1', 't']
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'true').lower() in ['true', '1', 't']
+app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', '')
+app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS', '')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('EMAIL_USER', 'noreply@example.com')
+
+mail = Mail(app)
 
 REDIS_URL = os.getenv('REDIS_URL')
 if REDIS_URL:
@@ -273,6 +285,10 @@ def register_page():
         return redirect(url_for('index'))
     return render_template('register.html')
 
+@app.route('/verify-email')
+def verify_email_page():
+    return render_template('verify-email.html')
+
 @app.route('/login')
 def login_page():
     if session.get('user_id'):
@@ -313,6 +329,8 @@ csrf_exempt_routes = [
     'conversion.ascii_to_base_endpoint',
     'conversion.base_to_ascii_endpoint',
     'account.check_ip_ban',
+    'account.register',
+    'account.verify_email',
     'csrf.get_csrf_token',
     'admin.get_all_users',
     'admin.get_banned_ips',
@@ -328,7 +346,9 @@ rate_limited_routes = [
     'conversion.convert_base_endpoint',
     'conversion.ascii_to_base_endpoint',
     'conversion.base_to_ascii_endpoint',
-    'account.request_account',
+    'account.register',
+    'account.verify_email',
+    'account.check_ip_ban',
     'usage.get_usage',
     'admin.get_all_users',
     'admin.ban_user',

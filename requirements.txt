@@ -1,6 +1,7 @@
 Flask
 Flask-WTF
 Flask-Limiter
+Flask-Mail
 redis
 gunicorn
 dotenv

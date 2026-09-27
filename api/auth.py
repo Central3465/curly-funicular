@@ -44,6 +44,9 @@ def login():
         record_failed_attempt(client_ip)
         return jsonify({'error': 'Invalid email or password'}), 401
 
+    if not user.get('verified'):
+        return jsonify({'error': 'Please verify your email before logging in. Check your inbox for the verification link.'}), 403
+
     if user.get('banned'):
         return jsonify({'error': 'Your account has been restricted.'}), 403
 
