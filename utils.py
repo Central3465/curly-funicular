@@ -11,14 +11,14 @@ TIER_PRO = 2
 TIER_SUPERUSER = 3
 
 # Base limits for default tier (0)
-BASE_SESSION_LIMIT = 100
-BASE_WEEKLY_LIMIT = 500
+BASE_SESSION_LIMIT = 50
+BASE_WEEKLY_LIMIT = 250
 
 # Tier multipliers
 TIER_MULTIPLIERS = {
     TIER_DEFAULT: 1.0,
     TIER_TRUSTED: 1.5,
-    TIER_PRO: 2.0,
+    TIER_PRO: 0.5, # pro is now a restricted tier with lower limits
     TIER_SUPERUSER: float('inf')  # unlimited
 }
 
@@ -175,8 +175,8 @@ def check_usage_limits(user_id):
     session_limit = limits.get('session_limit', {})
     weekly_limit = limits.get('weekly_limit', {})
 
-    session_exceeded = session_limit.get('count', 0) >= session_limit.get('max', 100)
-    weekly_exceeded = weekly_limit.get('count', 0) >= weekly_limit.get('max', 500)
+    session_exceeded = session_limit.get('count', 0) >= session_limit.get('max', 50)
+    weekly_exceeded = weekly_limit.get('count', 0) >= weekly_limit.get('max', 250)
 
     if session_exceeded:
         reset_at = session_limit.get('reset_at')
