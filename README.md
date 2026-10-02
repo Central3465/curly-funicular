@@ -62,6 +62,11 @@ cp .env.example .env
 python app.py
 ```
 
+6. Start Redis server:
+```bash
+sudo service redis-server start
+```
+
 The application will be available at `http://localhost:5000`.
 
 ## Environment Variables
