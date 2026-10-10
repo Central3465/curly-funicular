@@ -871,7 +871,7 @@
                     done.push(quest);
                 }
             })
-            
+
             questList.innerHTML = '';
             names.forEach((quest, index) => {
                 const li = document.createElement('li');
@@ -905,6 +905,25 @@
                 }
             } catch (error) {
                 console.error('Error fetching quests:', error);
+            }
+        }
+
+        async function updateQuestXP() {
+            try {
+                const response = await fetch('/api/get-quests', { headers: getHeaders() });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    questXp.textContent = data.completed_quests;
+                }
+            } catch (error) {
+                console.error('Error updating quest XP:', error);
             }
         }
 

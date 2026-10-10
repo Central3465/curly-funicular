@@ -39,7 +39,7 @@ def check_rankup():
 
     completed_quests = user.get('completed_quests', 0)
     
-    if complete_quests == 0:
+    if completed_quests == 0:
         return jsonify({'rankup': False, 'message': 'No quests completed yet.'})
     
     ranks = {
@@ -49,6 +49,6 @@ def check_rankup():
 
     for a, b in ranks.items():
         if completed_quests >= b and user.get('tier') < 1:
-            return jsonify({'rankup': True, 'new_rank': a, 'message': f'You have the required amount of XP {completed_quests} and is eligible to rank up to {a}.'})
+            return jsonify({'rankup': True, 'new_rank': {user.get('tier') + 1}, 'message': f'You have the required amount of XP {completed_quests} and is eligible to rank up to {a}.'})
 
-    return jsonify({'rankup': False, 'message': f'You have {completed_quests} XP. You need more quests completed to rank up.'})        
+    return jsonify({'rankup': False, 'message': f'You have {completed_quests} XP. You need more XP to rank up.'})        
