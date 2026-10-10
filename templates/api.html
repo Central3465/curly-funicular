@@ -1,394 +1,657 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="light dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
     <title>API Documentation - Cipher App</title>
     <style>
+      :root {
+        --bg-primary: #faf7f2;
+        --bg-secondary: #ffffff;
+        --text-primary: #1e1e1e;
+        --text-secondary: #5a4a3a;
+        --border-color: #e0d6cc;
+        --primary-color: #d9730d;
+        --primary-hover: #b35f00;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --code-bg: #2d2d2d;
+        --code-text: #e8e8e8;
+      }
+
+      @media (prefers-color-scheme: dark) {
         :root {
-            --bg-primary: #faf7f2;
-            --bg-secondary: #ffffff;
-            --text-primary: #1e1e1e;
-            --text-secondary: #5a4a3a;
-            --border-color: #e0d6cc;
-            --primary-color: #d9730d;
-            --primary-hover: #b35f00;
-            --error-color: #dc3545;
-            --success-color: #28a745;
-            --code-bg: #2d2d2d;
-            --code-text: #e8e8e8;
+          --bg-primary: #1a1a1a;
+          --bg-secondary: #2d2d2d;
+          --text-primary: #e8e8e8;
+          --text-secondary: #b8b8b8;
+          --border-color: #404040;
+          --primary-color: #e8a540;
+          --primary-hover: #f0b656;
+          --error-color: #ff6b6b;
+          --success-color: #51cf66;
+          --code-bg: #111111;
+          --code-text: #e8e8e8;
         }
+      }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #1a1a1a;
-                --bg-secondary: #2d2d2d;
-                --text-primary: #e8e8e8;
-                --text-secondary: #b8b8b8;
-                --border-color: #404040;
-                --primary-color: #e8a540;
-                --primary-hover: #f0b656;
-                --error-color: #ff6b6b;
-                --success-color: #51cf66;
-                --code-bg: #111111;
-                --code-text: #e8e8e8;
-            }
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Arial,
+          sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.5;
+        padding: 16px;
+      }
 
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
-            padding: 16px;
-        }
+      .docs-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
 
+      .nav-header {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        gap: 10px;
+      }
+
+      .nav-header h2 {
+        font-size: 1.5rem;
+      }
+
+      .nav-header a {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-right: 16px;
+      }
+
+      .nav-header a:hover {
+        text-decoration: underline;
+        color: var(--primary-color);
+      }
+
+      .intro {
+        background: var(--bg-primary);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+        font-size: 0.9rem;
+      }
+
+      .intro p {
+        margin-bottom: 10px;
+      }
+
+      .intro p:last-child {
+        margin-bottom: 0;
+      }
+
+      .intro code {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-family: monospace;
+        font-size: 0.85rem;
+      }
+
+      .endpoint {
+        background: var(--bg-primary);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+      }
+
+      .endpoint-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        list-style: none;
+        cursor: pointer;
+      }
+
+      /* Hide the browser's default disclosure marker; the ::after chevron replaces it */
+      .endpoint-title::-webkit-details-marker {
+        display: none;
+      }
+
+      .endpoint-title::after {
+        content: "▾";
+        margin-left: auto;
+        color: var(--text-secondary);
+        transition: transform 0.2s ease;
+      }
+
+      .endpoint details[open] > .endpoint-title::after {
+        transform: rotate(180deg);
+      }
+
+      .endpoint-title:hover .path {
+        color: var(--primary-color);
+      }
+
+      .endpoint-title:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 4px;
+        border-radius: 4px;
+      }
+
+      .endpoint-body {
+        margin-top: 16px;
+      }
+
+      .method {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+      }
+
+      .path {
+        font-family: monospace;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+      }
+
+      .endpoint h4 {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-top: 16px;
+        margin-bottom: 8px;
+      }
+
+      .endpoint h4:first-of-type {
+        margin-top: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      table th,
+      table td {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      table th {
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      table code {
+        font-family: monospace;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+
+      pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 14px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 0.8rem;
+        font-family: "Consolas", monospace;
+        line-height: 1.4;
+      }
+
+      .error-table {
+        margin-top: 8px;
+      }
+
+      .docs-footer {
+        margin-top: 20px;
+        padding: 20px;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .docs-footer a {
+        color: var(--primary-color);
+      }
+
+      @media (max-width: 768px) {
         .docs-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-header {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            gap: 10px;
+          margin: 10px;
+          padding: 15px;
         }
 
         .nav-header h2 {
-            font-size: 1.5rem;
-        }
-
-        .nav-header a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            margin-right: 16px;
-        }
-
-        .nav-header a:hover {
-            text-decoration: underline;
-            color: var(--primary-color);
-        }
-
-        .intro {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            font-size: 0.9rem;
-        }
-
-        .intro p {
-            margin-bottom: 10px;
-        }
-
-        .intro p:last-child {
-            margin-bottom: 0;
-        }
-
-        .intro code {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        .endpoint {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .endpoint-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
-        }
-
-        .method {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 4px;
-            letter-spacing: 0.5px;
-        }
-
-        .path {
-            font-family: monospace;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 16px;
-        }
-
-        .endpoint h4 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin-top: 16px;
-            margin-bottom: 8px;
-        }
-
-        .endpoint h4:first-of-type {
-            margin-top: 0;
+          font-size: 1.25rem;
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        table th,
-        table td {
-            text-align: left;
-            padding: 6px 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        table th {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        table code {
-            font-family: monospace;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 1px 5px;
+          font-size: 0.8rem;
         }
 
         pre {
-            background: var(--code-bg);
-            color: var(--code-text);
-            padding: 14px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 0.8rem;
-            font-family: 'Consolas', monospace;
-            line-height: 1.4;
+          font-size: 0.75rem;
         }
-
-        .error-table {
-            margin-top: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .docs-container {
-                margin: 10px;
-                padding: 15px;
-            }
-
-            .nav-header h2 {
-                font-size: 1.25rem;
-            }
-
-            table {
-                font-size: 0.8rem;
-            }
-
-            pre {
-                font-size: 0.75rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="docs-container">
-        <div class="nav-header">
-            <h2>📄 Cipher API Documentation</h2>
-            <div>
-                <a href="/">← Back to App</a>
-                <a href="/settings">⚙️ Settings</a>
-            </div>
+      <div class="nav-header">
+        <h2>📄 Cipher API Documentation</h2>
+        <div>
+          <a href="/">← Back to App</a>
+          <a href="/settings">⚙️ Settings</a>
         </div>
+      </div>
 
-        <div class="intro">
-            <p>These endpoints let you run the substitution-cipher tools programmatically instead of through the web UI.</p>
-            <p>Authenticate every request with either your browser session (if you're logged in and calling from this site) or an API key. For external callers, generate a key in <a href="/settings">Settings</a> and send it on every request as:</p>
-            <p><code>X-API-Key: &lt;your_key&gt;</code></p>
-            <p>Requests with no valid session and no valid <code>X-API-Key</code> header are rejected with <code>401 Unauthorized</code>. All endpoints are <code>POST</code>, accept a JSON body, and count against your account's usage limits (visible in Settings) regardless of which auth method you use.</p>
-        </div>
+      <div class="intro">
+        <p>
+          These endpoints let you run the substitution-cipher tools
+          programmatically instead of through the web UI.
+        </p>
+        <p>
+          Authenticate every request with either your browser session (if you're
+          logged in and calling from this site) or an API key. For external
+          callers, generate a key in <a href="/settings">Settings</a> and send
+          it on every request as:
+        </p>
+        <p><code>X-API-Key: &lt;your_key&gt;</code></p>
+        <p>
+          Requests with no valid session and no valid
+          <code>X-API-Key</code> header are rejected with
+          <code>401 Unauthorized</code>. All endpoints are <code>POST</code>,
+          accept a JSON body, and count against your account's usage limits
+          (visible in Settings) regardless of which auth method you use.
+        </p>
+      </div>
 
-        <div class="endpoint">
-            <div class="endpoint-title">
-                <span class="method">POST</span>
-                <span class="path">/api/generate-cipher</span>
+      <div class="endpoint">
+        <details>
+          <summary class="endpoint-title">
+            <span class="method">POST</span>
+            <span class="path">/api/generate-cipher</span>
+          </summary>
+          <div class="endpoint-body">
+            <div class="description">
+              Generates a random 26-letter substitution cipher (a shuffled
+              alphabet).
             </div>
-            <div class="description">Generates a random 26-letter substitution cipher (a shuffled alphabet).</div>
 
             <h4>Parameters</h4>
             <p class="description">None.</p>
 
             <h4>Example request</h4>
-            <pre>curl -X POST https://curly-funicular-production.up.railway.app/api/generate-cipher \
-  -H "X-API-Key: sk_your_api_key"</pre>
+            <pre>
+curl -X POST https://curly-funicular-production.up.railway.app/api/generate-cipher \
+  -H "X-API-Key: sk_your_api_key"</pre
+            >
 
             <h4>Example response <code>200</code></h4>
-            <pre>{
+            <pre>
+{
   "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
   "success": true
-}</pre>
+}</pre
+            >
 
             <h4>Possible errors</h4>
             <table class="error-table">
-                <tr><th>Status</th><th>Response</th></tr>
-                <tr><td><code>401</code></td><td><code>{"error": "Unauthorized. Please log in or provide a valid API key in the X-API-Key header."}</code></td></tr>
-                <tr><td><code>429</code></td><td><code>{"error": "Session limit reached. Resets in Xh Ym"}</code></td></tr>
-                <tr><td><code>500</code></td><td><code>{"error": "&lt;message&gt;"}</code></td></tr>
+              <tr>
+                <th>Status</th>
+                <th>Response</th>
+              </tr>
+              <tr>
+                <td><code>401</code></td>
+                <td>
+                  <code
+                    >{"error": "Unauthorized. Please log in or provide a valid API
+                    key in the X-API-Key header."}</code
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>
+                  <code>{"error": "Session limit reached. Resets in Xh Ym"}</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td><code>{"error": "&lt;message&gt;"}</code></td>
+              </tr>
             </table>
-        </div>
+          </div>
+        </details>
+      </div>
 
-        <div class="endpoint">
-            <div class="endpoint-title">
-                <span class="method">POST</span>
-                <span class="path">/api/validate-cipher</span>
+      <div class="endpoint">
+        <details>
+          <summary class="endpoint-title">
+            <span class="method">POST</span>
+            <span class="path">/api/validate-cipher</span>
+          </summary>
+          <div class="endpoint-body">
+            <div class="description">
+              Checks that a 26-letter cipher is well-formed (every letter of the
+              alphabet appears exactly once).
             </div>
-            <div class="description">Checks that a 26-letter cipher is well-formed (every letter of the alphabet appears exactly once).</div>
 
             <h4>Parameters</h4>
             <table>
-                <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td><code>cipher</code></td><td>array[string] (or its string form)</td><td>Yes</td><td>26-letter substitution cipher to validate.</td></tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+              <tr>
+                <td><code>cipher</code></td>
+                <td>array[string] (or its string form)</td>
+                <td>Yes</td>
+                <td>26-letter substitution cipher to validate.</td>
+              </tr>
             </table>
 
             <h4>Example request</h4>
-            <pre>curl -X POST https://curly-funicular-production.up.railway.app/api/validate-cipher \
+            <pre>
+curl -X POST https://curly-funicular-production.up.railway.app/api/validate-cipher \
   -H "X-API-Key: sk_your_api_key" \
   -H "Content-Type: application/json" \
-  -d '{"cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]}'</pre>
+  -d '{"cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]}'</pre
+            >
 
             <h4>Example response <code>200</code> (valid)</h4>
-            <pre>{
+            <pre>
+{
   "valid": true,
   "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]
-}</pre>
+}</pre
+            >
 
             <h4>Example response <code>200</code> (invalid)</h4>
-            <pre>{
+            <pre>
+{
   "valid": false,
   "error": "Cipher must contain exactly 26 letters"
-}</pre>
+}</pre
+            >
 
             <h4>Possible errors</h4>
             <table class="error-table">
-                <tr><th>Status</th><th>Response</th></tr>
-                <tr><td><code>401</code></td><td><code>{"error": "Unauthorized. Please log in or provide a valid API key in the X-API-Key header."}</code></td></tr>
-                <tr><td><code>429</code></td><td><code>{"error": "Weekly limit reached. Resets in Xd Yh Zm"}</code></td></tr>
+              <tr>
+                <th>Status</th>
+                <th>Response</th>
+              </tr>
+              <tr>
+                <td><code>401</code></td>
+                <td>
+                  <code
+                    >{"error": "Unauthorized. Please log in or provide a valid API
+                    key in the X-API-Key header."}</code
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>
+                  <code>{"error": "Weekly limit reached. Resets in Xd Yh Zm"}</code>
+                </td>
+              </tr>
             </table>
-        </div>
+          </div>
+        </details>
+      </div>
 
-        <div class="endpoint">
-            <div class="endpoint-title">
-                <span class="method">POST</span>
-                <span class="path">/api/encode</span>
+      <div class="endpoint">
+        <details>
+          <summary class="endpoint-title">
+            <span class="method">POST</span>
+            <span class="path">/api/encode</span>
+          </summary>
+          <div class="endpoint-body">
+            <div class="description">
+              Encrypts a plaintext message using a substitution cipher and a secret
+              key.
             </div>
-            <div class="description">Encrypts a plaintext message using a substitution cipher and a secret key.</div>
 
             <h4>Parameters</h4>
             <table>
-                <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td><code>cipher</code></td><td>array[string]</td><td>Yes</td><td>26-letter substitution cipher, e.g. from <code>/api/generate-cipher</code>.</td></tr>
-                <tr><td><code>message</code></td><td>string</td><td>Yes</td><td>Plaintext message to encrypt.</td></tr>
-                <tr><td><code>key</code></td><td>string</td><td>Yes</td><td>Secret key used to derive decoy characters; cannot be empty.</td></tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+              <tr>
+                <td><code>cipher</code></td>
+                <td>array[string]</td>
+                <td>Yes</td>
+                <td>
+                  26-letter substitution cipher, e.g. from
+                  <code>/api/generate-cipher</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>message</code></td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>Plaintext message to encrypt.</td>
+              </tr>
+              <tr>
+                <td><code>key</code></td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>
+                  Secret key used to derive decoy characters; cannot be empty.
+                </td>
+              </tr>
             </table>
 
             <h4>Example request</h4>
-            <pre>curl -X POST https://curly-funicular-production.up.railway.app/api/encode \
+            <pre>
+curl -X POST https://curly-funicular-production.up.railway.app/api/encode \
   -H "X-API-Key: sk_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
     "message": "hello world",
     "key": "mysecret"
-  }'</pre>
+  }'</pre
+            >
 
             <h4>Example response <code>200</code></h4>
-            <pre>{
+            <pre>
+{
   "encrypted": "itssg vgksr"
-}</pre>
+}</pre
+            >
 
             <h4>Possible errors</h4>
             <table class="error-table">
-                <tr><th>Status</th><th>Response</th></tr>
-                <tr><td><code>400</code></td><td><code>{"error": "Key cannot be empty"}</code></td></tr>
-                <tr><td><code>400</code></td><td><code>{"error": "&lt;cipher validation error&gt;"}</code></td></tr>
-                <tr><td><code>401</code></td><td><code>{"error": "Unauthorized. Please log in or provide a valid API key in the X-API-Key header."}</code></td></tr>
-                <tr><td><code>429</code></td><td><code>{"error": "Session limit reached. Resets in Xh Ym"}</code></td></tr>
-                <tr><td><code>500</code></td><td><code>{"error": "&lt;message&gt;"}</code></td></tr>
+              <tr>
+                <th>Status</th>
+                <th>Response</th>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>{"error": "Key cannot be empty"}</code></td>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>{"error": "&lt;cipher validation error&gt;"}</code></td>
+              </tr>
+              <tr>
+                <td><code>401</code></td>
+                <td>
+                  <code
+                    >{"error": "Unauthorized. Please log in or provide a valid API
+                    key in the X-API-Key header."}</code
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>
+                  <code>{"error": "Session limit reached. Resets in Xh Ym"}</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td><code>{"error": "&lt;message&gt;"}</code></td>
+              </tr>
             </table>
-        </div>
+          </div>
+        </details>
+      </div>
 
-        <div class="endpoint">
-            <div class="endpoint-title">
-                <span class="method">POST</span>
-                <span class="path">/api/decode</span>
+      <div class="endpoint">
+        <details>
+          <summary class="endpoint-title">
+            <span class="method">POST</span>
+            <span class="path">/api/decode</span>
+          </summary>
+          <div class="endpoint-body">
+            <div class="description">
+              Decrypts a message that was encoded with
+              <code>/api/encode</code> using the matching cipher and key.
             </div>
-            <div class="description">Decrypts a message that was encoded with <code>/api/encode</code> using the matching cipher and key.</div>
 
             <h4>Parameters</h4>
             <table>
-                <tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr>
-                <tr><td><code>cipher</code></td><td>array[string]</td><td>Yes</td><td>The same 26-letter substitution cipher used to encode the message.</td></tr>
-                <tr><td><code>message</code></td><td>string</td><td>Yes</td><td>Encrypted message to decrypt.</td></tr>
-                <tr><td><code>key</code></td><td>string</td><td>Yes</td><td>Secret key that was used to encode the message; cannot be empty.</td></tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+              <tr>
+                <td><code>cipher</code></td>
+                <td>array[string]</td>
+                <td>Yes</td>
+                <td>
+                  The same 26-letter substitution cipher used to encode the message.
+                </td>
+              </tr>
+              <tr>
+                <td><code>message</code></td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>Encrypted message to decrypt.</td>
+              </tr>
+              <tr>
+                <td><code>key</code></td>
+                <td>string</td>
+                <td>Yes</td>
+                <td>
+                  Secret key that was used to encode the message; cannot be empty.
+                </td>
+              </tr>
             </table>
 
             <h4>Example request</h4>
-            <pre>curl -X POST https://curly-funicular-production.up.railway.app/api/decode \
+            <pre>
+curl -X POST https://curly-funicular-production.up.railway.app/api/decode \
   -H "X-API-Key: sk_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
     "message": "itssg vgksr",
     "key": "mysecret"
-  }'</pre>
+  }'</pre
+            >
 
             <h4>Example response <code>200</code></h4>
-            <pre>{
+            <pre>
+{
   "decoded": "hello world"
-}</pre>
+}</pre
+            >
 
             <h4>Possible errors</h4>
             <table class="error-table">
-                <tr><th>Status</th><th>Response</th></tr>
-                <tr><td><code>400</code></td><td><code>{"error": "Key cannot be empty"}</code></td></tr>
-                <tr><td><code>400</code></td><td><code>{"error": "&lt;cipher validation error&gt;"}</code></td></tr>
-                <tr><td><code>401</code></td><td><code>{"error": "Unauthorized. Please log in or provide a valid API key in the X-API-Key header."}</code></td></tr>
-                <tr><td><code>429</code></td><td><code>{"error": "Session limit reached. Resets in Xh Ym"}</code></td></tr>
-                <tr><td><code>500</code></td><td><code>{"error": "&lt;message&gt;"}</code></td></tr>
+              <tr>
+                <th>Status</th>
+                <th>Response</th>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>{"error": "Key cannot be empty"}</code></td>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>{"error": "&lt;cipher validation error&gt;"}</code></td>
+              </tr>
+              <tr>
+                <td><code>401</code></td>
+                <td>
+                  <code
+                    >{"error": "Unauthorized. Please log in or provide a valid API
+                    key in the X-API-Key header."}</code
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>429</code></td>
+                <td>
+                  <code>{"error": "Session limit reached. Resets in Xh Ym"}</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td><code>{"error": "&lt;message&gt;"}</code></td>
+              </tr>
             </table>
-        </div>
+          </div>
+        </details>
+      </div>
+
+      <p class="docs-footer">
+        There are more API endpoints available to use, they are in
+        <a href="/help#api">the help documentation</a>. I will add them to this page
+        soon, that is when I have time. However, you are free to submit a PR on
+        the Github repo with your code changes to make this easier for me.
+      </p>
     </div>
-</body>
+  </body>
 </html>
