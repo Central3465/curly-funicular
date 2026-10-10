@@ -269,7 +269,13 @@ def require_admin(f):
 @app.route('/')
 def index():
     if session.get('user_id'):
-        return render_template('index.html', logged_in=True)
+        is_new_account = False
+        if users_collection is not None:
+            user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))})
+            created_at = user.get('created_at') if user else None
+            if isinstance(created_at, datetime):
+                is_new_account = datetime.now() - created_at < timedelta(days=3)
+        return render_template('index.html', logged_in=True, is_new_account=is_new_account)
     return render_template('index.html', logged_in=False)
 
 @app.route('/credits')
