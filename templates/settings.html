@@ -229,7 +229,7 @@
                 document.getElementById('user-tier').textContent = data.tier_name || 'Unknown';
                 
                 const usageTip = document.getElementById('usage-tip').textContent;
-                if (data.tier_name === 'Default' && 'Trusted' && 'Pro') {
+                if (data.tier_name === 'Default' || data.tier_name === 'Trusted' || data.tier_name === 'Pro') {
                     document.getElementById('usage-tip').textContent = 'You can upgrade to a higher tier by completing quests and complying with our terms of service.';
                 } else {
                     document.getElementById('usage-tip').textContent = 'You are on the highest tier. Enjoy unlimited usage!';
