@@ -20,7 +20,7 @@ BASE_WEEKLY_LIMIT = 250
 TIER_MULTIPLIERS = {
     TIER_DEFAULT: 1.0,
     TIER_TRUSTED: 1.5,
-    TIER_PRO: 0.5, # pro is now a restricted tier with lower limits
+    TIER_PRO: 0.5,  # pro is now a restricted tier with lower limits
     TIER_SUPERUSER: float('inf')  # unlimited
 }
 
@@ -123,6 +123,13 @@ def require_auth_or_api_key(f):
     return decorated_function
 
 
+def is_success_response(result):
+    """A plain response counts as success. A (body, status) tuple counts only for a 2xx status."""
+    if isinstance(result, tuple) and len(result) >= 2:
+        return 200 <= result[1] < 300
+    return True
+
+
 def track_usage(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -132,19 +139,28 @@ def track_usage(f):
         if not user_id or users_collection is None:
             return f(*args, **kwargs)
 
-        user = users_collection.find_one({'_id': ObjectId(user_id)})
+        result = f(*args, **kwargs)
 
-        if not user:
+        if is_success_response(result):
+            increment_usage(user_id)
+
+        return result
+    return decorated_function
+
+
+def track_quests(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        from app import users_collection
+
+        user_id = get_authenticated_user_id()
+        if not user_id or users_collection is None:
             return f(*args, **kwargs)
 
         result = f(*args, **kwargs)
 
-        if isinstance(result, tuple) and len(result) >= 2:
-            status_code = result[1] if len(result) > 1 else None
-            if status_code and status_code >= 200 and status_code < 300:
-                increment_usage(user_id)
-        else:
-            increment_usage(user_id)
+        if is_success_response(result):
+            users_collection.update_one({'_id': ObjectId(user_id)}, {'$inc': {'completed_quests': 1}})
 
         return result
     return decorated_function
@@ -286,13 +302,12 @@ def increment_usage(user_id):
     if users_collection is None:
         return
 
-    limits = get_usage_limits(user_id)
+    # Make sure usage_limits exist before incrementing them
+    if not get_usage_limits(user_id):
+        return
 
-    if limits:
-        limits['session_limit']['count'] = limits['session_limit'].get('count', 0) + 1
-        limits['weekly_limit']['count'] = limits['weekly_limit'].get('count', 0) + 1
-
-        users_collection.update_one(
-            {'_id': ObjectId(user_id)},
-            {'$set': {'usage_limits': limits}}
-        )
+    # $inc updates the counts atomically, so concurrent requests can't overwrite each other
+    users_collection.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$inc': {'usage_limits.session_limit.count': 1, 'usage_limits.weekly_limit.count': 1}}
+    )

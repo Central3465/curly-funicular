@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from cipher import decode_message, validate_cipher, encode_message, create_random_cipher
 from api import cipher_bp
-from utils import require_auth_or_api_key, track_usage, check_usage_limits, get_authenticated_user_id
+from utils import require_auth_or_api_key, track_usage, check_usage_limits, get_authenticated_user_id, track_quests
 
 
 @cipher_bp.route('/api/validate-cipher', methods=['POST'])
@@ -26,6 +26,7 @@ def validate_cipher_endpoint():
 @cipher_bp.route('/api/decode', methods=['POST'])
 @require_auth_or_api_key
 @track_usage
+@track_quests
 def decode_endpoint():
     can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
@@ -54,6 +55,7 @@ def decode_endpoint():
 @cipher_bp.route('/api/generate-cipher', methods=['POST'])
 @require_auth_or_api_key
 @track_usage
+@track_quests
 def generate_cipher_endpoint():
     can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
@@ -69,6 +71,7 @@ def generate_cipher_endpoint():
 @cipher_bp.route('/api/encode', methods=['POST'])
 @require_auth_or_api_key
 @track_usage
+@track_quests
 def encode_endpoint():
     can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:

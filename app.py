@@ -327,7 +327,7 @@ def api_docs_page():
 def help_page():
     return render_template('help.html')
 
-from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp
+from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp, quest_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
@@ -336,6 +336,7 @@ app.register_blueprint(conversion_bp)
 app.register_blueprint(account_bp)
 app.register_blueprint(csrf_bp)
 app.register_blueprint(usage_bp)
+app.register_blueprint(quest_bp)
 
 csrf_exempt_routes = [
     'auth.login',

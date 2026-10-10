@@ -8,6 +8,32 @@
     <title>Curly Funicular</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <style>
+        .quest-xp {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .quest-xp-value {
+            display: inline-block;
+            min-width: 2.5ch;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: var(--primary-color);
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .quest-xp {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
     {% if logged_in %}
@@ -822,49 +848,73 @@
     {% if logged_in %}
     <div class="quest-widget" id="quest-widget">
         <div class="quest-menu">
-            <h2 class="quest-title">🗺️ Quests</h2>
-            <div class="quest-progress"><div class="quest-progress-bar" style="width: 20%;"></div></div>
-            <ul class="quest-list">
-                <li class="quest-item is-done">
-                    <span class="quest-item-check"></span>
-                    <span class="quest-item-text">Create an account</span>
-                    <span class="quest-reward">+10 XP</span>
-                </li>
-                <li class="quest-item">
-                    <span class="quest-item-check"></span>
-                    <span class="quest-item-text">Generate a cipher</span>
-                    <span class="quest-reward">+15 XP</span>
-                </li>
-                <li class="quest-item">
-                    <span class="quest-item-check"></span>
-                    <span class="quest-item-text">Encode a message</span>
-                    <span class="quest-reward">+20 XP</span>
-                </li>
-                <li class="quest-item">
-                    <span class="quest-item-check"></span>
-                    <span class="quest-item-text">Decode a message</span>
-                    <span class="quest-reward">+20 XP</span>
-                </li>
-                <li class="quest-item">
-                    <span class="quest-item-check"></span>
-                    <span class="quest-item-text">Try the base converter</span>
-                    <span class="quest-reward">+25 XP</span>
-                </li>
-            </ul>
+            <h2 class="quest-title">🗺️ Ranks</h2>
+            <span class="quest-xp">Your XP: <span class="quest-xp-value">0</span></span>
+            <ul class="quest-list"></ul>
         </div>
         <button class="quest-toggle" id="quest-toggle" aria-expanded="false" aria-controls="quest-widget" aria-label="Toggle quests">🗺️</button>
     </div>
 
     <script>
-        (function () {
-            const widget = document.getElementById('quest-widget');
-            const toggle = document.getElementById('quest-toggle');
+        const questWidget = document.getElementById('quest-widget');
+        const questToggle = document.getElementById('quest-toggle');
+        const questList = questWidget.querySelector('.quest-list');
+        const questXp = questWidget.querySelector('.quest-xp-value');
+        const questBar = questWidget.querySelector('.quest-progress-bar');
 
-            toggle.addEventListener('click', function () {
-                const isOpen = widget.classList.toggle('is-open');
-                toggle.setAttribute('aria-expanded', isOpen);
+        function renderQuests(data) {
+            const completed = data.completed_quests;
+            const names = Object.keys(data.quests).sort((a, b) => Number(data.quests[a]) - Number(data.quests[b]));
+            const done = []
+            names.forEach((quest, index) => {
+                if (completed >= Number(data.quests[quest])) {
+                    done.push(quest);
+                }
+            })
+            
+            questList.innerHTML = '';
+            names.forEach((quest, index) => {
+                const li = document.createElement('li');
+                li.className = 'quest-item';
+                li.innerHTML = `<span class="quest-status">${done.includes(quest) ? '✅' : '❌'}</span> <strong>${quest}</strong> - ${data.quests[quest]} XP`;
+                questList.appendChild(li);
             });
-        })();
+
+            questXp.textContent = completed;
+        }
+
+        async function getQuests() {
+            try {
+                const response = await fetch('/api/get-quests', { headers: getHeaders() });
+
+                if (response.status === 401) {
+                    showAuthWarning();
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderQuests(data);
+                } else {
+                    questList.textContent = '';
+                    const li = document.createElement('li');
+                    li.className = 'quest-item';
+                    li.textContent = data.error || 'Could not load quests.';
+                    questList.appendChild(li);
+                }
+            } catch (error) {
+                console.error('Error fetching quests:', error);
+            }
+        }
+
+        questToggle.addEventListener('click', function () {
+            const isOpen = questWidget.classList.toggle('is-open');
+            questToggle.setAttribute('aria-expanded', isOpen);
+            if (isOpen) {
+                getQuests();
+            }
+        });
     </script>
     {% endif %}
 </body>
