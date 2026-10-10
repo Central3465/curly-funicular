@@ -7,77 +7,7 @@
     <meta name="description" content="A simple cypher encoder and decoder.">
     <title>Curly Funicular</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        .user-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .user-nav a {
-            color: var(--text-primary);
-            text-decoration: none;
-            margin-left: 15px;
-            font-size: 0.95rem;
-        }
-        .user-nav a:hover {
-            text-decoration: underline;
-        }
-        .user-email {
-            font-weight: 600;
-            color: var(--primary-color);
-            font-size: 0.95rem;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .user-nav > div {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-            white-space: nowrap;
-        }
-        @media (max-width: 768px) {
-            .user-nav {
-                padding: 8px 12px;
-                gap: 5px;
-            }
-            .user-nav a {
-                margin-left: 8px;
-                font-size: 0.85rem;
-            }
-            .user-email {
-                font-size: 0.85rem;
-                flex-basis: 100%;
-            }
-            .user-nav > div {
-                flex-basis: 100%;
-                gap: 5px;
-            }
-            .user-nav a {
-                margin-left: 0;
-            }
-        }
-        @media (max-width: 480px) {
-            .user-nav {
-                padding: 6px 10px;
-            }
-            .user-nav a {
-                font-size: 0.75rem;
-            }
-            .user-email {
-                font-size: 0.75rem;
-            }
-            .user-nav > div {
-                gap: 3px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
 </head>
 <body>
     {% if logged_in %}
@@ -888,5 +818,54 @@
             document.getElementById('success-message').style.display = 'none';
         }
     </script>
+
+    {% if logged_in %}
+    <div class="quest-widget" id="quest-widget">
+        <div class="quest-menu">
+            <h2 class="quest-title">🗺️ Quests</h2>
+            <div class="quest-progress"><div class="quest-progress-bar" style="width: 20%;"></div></div>
+            <ul class="quest-list">
+                <li class="quest-item is-done">
+                    <span class="quest-item-check"></span>
+                    <span class="quest-item-text">Create an account</span>
+                    <span class="quest-reward">+10 XP</span>
+                </li>
+                <li class="quest-item">
+                    <span class="quest-item-check"></span>
+                    <span class="quest-item-text">Generate a cipher</span>
+                    <span class="quest-reward">+15 XP</span>
+                </li>
+                <li class="quest-item">
+                    <span class="quest-item-check"></span>
+                    <span class="quest-item-text">Encode a message</span>
+                    <span class="quest-reward">+20 XP</span>
+                </li>
+                <li class="quest-item">
+                    <span class="quest-item-check"></span>
+                    <span class="quest-item-text">Decode a message</span>
+                    <span class="quest-reward">+20 XP</span>
+                </li>
+                <li class="quest-item">
+                    <span class="quest-item-check"></span>
+                    <span class="quest-item-text">Try the base converter</span>
+                    <span class="quest-reward">+25 XP</span>
+                </li>
+            </ul>
+        </div>
+        <button class="quest-toggle" id="quest-toggle" aria-expanded="false" aria-controls="quest-widget" aria-label="Toggle quests">🗺️</button>
+    </div>
+
+    <script>
+        (function () {
+            const widget = document.getElementById('quest-widget');
+            const toggle = document.getElementById('quest-toggle');
+
+            toggle.addEventListener('click', function () {
+                const isOpen = widget.classList.toggle('is-open');
+                toggle.setAttribute('aria-expanded', isOpen);
+            });
+        })();
+    </script>
+    {% endif %}
 </body>
 </html>

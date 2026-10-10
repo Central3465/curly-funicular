@@ -1,0 +1,235 @@
+.user-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.user-nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-left: 15px;
+    font-size: 0.95rem;
+}
+
+.user-nav a:hover {
+    text-decoration: underline;
+}
+
+.user-email {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-nav>div {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .user-nav {
+        padding: 8px 12px;
+        gap: 5px;
+    }
+
+    .user-nav a {
+        margin-left: 8px;
+        font-size: 0.85rem;
+    }
+
+    .user-email {
+        font-size: 0.85rem;
+        flex-basis: 100%;
+    }
+
+    .user-nav>div {
+        flex-basis: 100%;
+        gap: 5px;
+    }
+
+    .user-nav a {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-nav {
+        padding: 6px 10px;
+    }
+
+    .user-nav a {
+        font-size: 0.75rem;
+    }
+
+    .user-email {
+        font-size: 0.75rem;
+    }
+
+    .user-nav>div {
+        gap: 3px;
+    }
+}
+
+.quest-widget {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.quest-toggle {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quest-toggle:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.quest-toggle:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 3px;
+}
+
+.quest-widget.is-open .quest-toggle {
+    transform: rotate(45deg);
+}
+
+.quest-menu {
+    width: min(300px, calc(100vw - 40px));
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    color: var(--text-primary);
+    transform-origin: bottom right;
+    transform: scale(0.1);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease, visibility 0.25s;
+}
+
+.quest-widget.is-open .quest-menu {
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.quest-title {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.quest-progress {
+    height: 8px;
+    margin-bottom: 14px;
+    border-radius: 999px;
+    background: var(--border-color);
+    overflow: hidden;
+}
+
+.quest-progress-bar {
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: var(--primary-color);
+    transition: width 0.4s ease;
+}
+
+.quest-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quest-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 0.95rem;
+}
+
+.quest-item-check {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+}
+
+.quest-item.is-done {
+    opacity: 0.6;
+}
+
+.quest-item.is-done .quest-item-check {
+    background: var(--primary-color);
+}
+
+.quest-item.is-done .quest-item-text {
+    text-decoration: line-through;
+}
+
+.quest-reward {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .quest-widget {
+        right: 16px;
+        bottom: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quest-toggle,
+    .quest-menu,
+    .quest-progress-bar {
+        transition: none;
+    }
+}
