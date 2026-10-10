@@ -83,6 +83,7 @@
     <div class="user-nav">
         <span class="user-email">👤 {{ session.get('email', 'User') }}</span>
         <div>
+            <a href="/help">❓ Help</a>
             <a href="/settings">⚙️ Settings</a>
             {% if session.get('isAdmin', False) %}
             <a href="/admin">🛡️ Admin</a>
@@ -103,7 +104,7 @@
     {% if not logged_in %}
     <div id="password-lock-overlay" class="password-lock-overlay" style="display: flex;">
         <div class="password-lock-container">
-            <h2>🔐 Access Restricted</h2>
+            <h2>🔐 Account Required!</h2>
             <p class="lock-description">This website requires an account to use. Please log in or register to continue.</p>
             <button onclick="window.location.href='/login'" class="btn btn-primary">Log In</button>
             <button onclick="window.location.href='/register'" class="btn btn-secondary" style="margin-top: 10px;">Register</button>

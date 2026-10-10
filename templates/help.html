@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Help - Cypher Encoder & Decoder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .help-toc {
+            flex-wrap: wrap;
+            margin-bottom: 0;
+        }
+
+        .help-section h3 {
+            font-size: 1.15rem;
+            margin: 24px 0 10px;
+            color: var(--text-primary);
+        }
+
+        .help-section h3:first-child {
+            margin-top: 0;
+        }
+
+        .help-section p,
+        .help-section li {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .help-section ul,
+        .help-section ol {
+            margin: 0 0 12px 22px;
+        }
+
+        .help-section li {
+            margin-bottom: 6px;
+        }
+
+        .help-section code {
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1px 6px;
+        }
+
+        .help-section pre {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 14px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--text-primary);
+        }
+
+        .help-section pre code {
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .help-note {
+            border-left: 4px solid var(--primary-color);
+            background: var(--bg-primary);
+            border-radius: 5px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .help-note.warning {
+            border-left-color: var(--error-color);
+        }
+
+        .help-table-wrap {
+            overflow-x: auto;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+
+        .help-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .help-table th,
+        .help-table td {
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .help-table th {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .help-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .help-table code {
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .method-tag {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-right: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .endpoint-block {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 18px;
+            background: var(--bg-secondary);
+        }
+
+        .endpoint-block h4 {
+            font-family: monospace;
+            font-size: 1rem;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .endpoint-block > p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .section-nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .section-nav a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .help-section pre {
+                font-size: 0.75rem;
+            }
+
+            .help-table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📘 How to Use Cypher</h1>
+            <p class="subtitle">A guide to the web app and the REST API</p>
+            <div class="tabs help-toc">
+                <a class="tab-btn" href="#getting-started">Getting Started</a>
+                <a class="tab-btn" href="#web-app">Web App</a>
+                <a class="tab-btn" href="#ciphers">How Ciphers Work</a>
+                <a class="tab-btn" href="#api">API</a>
+                <a class="tab-btn" href="#troubleshooting">Troubleshooting</a>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Getting Started -->
+            <div class="section help-section" id="getting-started">
+                <h2>Getting Started</h2>
+
+                <p>Cypher is a substitution-cipher tool. You create a random 26-letter alphabet (the <strong>cipher</strong>), choose a <strong>secret key</strong>, and use both to encrypt and decrypt messages. Everything requires an account.</p>
+
+                <h3>1. Create an account</h3>
+                <ol>
+                    <li>Open <a href="{{ url_for('register_page') }}">Register</a>.</li>
+                    <li>Enter your full name, email address, and a password of at least 8 characters.</li>
+                    <li>Confirm the password and submit. Accounts are active immediately.</li>
+                </ol>
+
+                <h3>2. Log in</h3>
+                <p>Go to <a href="{{ url_for('login_page') }}">Login</a> and enter your email and password. Once you are logged in, the main page unlocks and the navigation bar shows your email, <strong>Help</strong>, <strong>Settings</strong>, and <strong>Logout</strong>.</p>
+
+                <div class="help-note warning">
+                    Remember your password! Entering it wrong 5 times will lock you out! Currently, forgetting your password is a lost cause, so keep it somewhere safe.
+                </div>
+
+                <div class="section-nav">
+                    <span></span>
+                    <a href="#web-app">Next: Web App →</a>
+                </div>
+            </div>
+
+            <!-- Web App -->
+            <div class="section help-section" id="web-app">
+                <h2>Using the Web App</h2>
+
+                <p>The main page has three tabs at the top: <strong>Encoder</strong>, <strong>Decoder</strong>, and <strong>Base Converter</strong>. Each shows a result box with a copy button when it has output. Success and error messages appear at the bottom of the card and disappear after a few seconds.</p>
+
+                <h3>📝 Encoder: encrypt a message</h3>
+                <ol>
+                    <li>Under <strong>Setup Encoder</strong>, type a <strong>Secret Key</strong>. It cannot be blank.</li>
+                    <li>Get a cipher in one of two ways:
+                        <ul>
+                            <li>Click <strong>Generate Random Cipher</strong>, then <strong>Copy Cipher</strong> if you want to save it.</li>
+                            <li>Or paste an existing cipher into <strong>Or Enter Existing Cipher</strong>. It must be a list of 26 different letters, such as <code>["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]</code>.</li>
+                        </ul>
+                    </li>
+                    <li>Click <strong>Start Encoding</strong>. The cipher is checked on the server. If it is valid, the message form opens.</li>
+                    <li>Type your message and click <strong>Encode Message</strong>. Copy the result with <strong>Copy to Clipboard</strong>.</li>
+                    <li>Click <strong>Reset Setup</strong> to clear the cipher and key and start over.</li>
+                </ol>
+
+                <h3>🔍 Decoder: decrypt a message</h3>
+                <ol>
+                    <li>Under <strong>Setup Decoder</strong>, paste the <strong>same cipher</strong> that was used to encode the message.</li>
+                    <li>Enter the <strong>same secret key</strong>.</li>
+                    <li>Click <strong>Set Up Decoder</strong>, then paste the encrypted text into <strong>Encrypted Message</strong> and click <strong>Decode Message</strong>.</li>
+                </ol>
+
+                <div class="help-note">
+                    Setup lasts only while the page is open. Reloading the page clears your cipher and key, so keep a copy of both if you need them again.
+                </div>
+
+                <h3>🔢 Base Converter: numbers and text</h3>
+                <p>The Base Converter has three modes, selected with the buttons at the top of the panel. Bases run from <strong>2 to 36</strong>. Digits above 9 use the letters A–Z, and letter case is ignored on input.</p>
+                <ul>
+                    <li><strong>Base Converter</strong>: enter a number, its <em>From Base</em>, and the <em>To Base</em>. For example, <code>ff</code> from base 16 to base 10 gives <code>255</code>.</li>
+                    <li><strong>ASCII → Base</strong>: enter text and a target base. Each character becomes its own number, separated by spaces. For example, <code>Hi</code> in base 16 gives <code>48 69</code>.</li>
+                    <li><strong>Base → ASCII</strong>: enter numbers separated by spaces and the base they are written in. Each number must be between 0 and 127. For example, <code>48 69</code> in base 16 gives <code>Hi</code>.</li>
+                </ul>
+
+                <h3>⚙️ Settings: account, usage, and API key</h3>
+                <p>Open <a href="{{ url_for('settings_page') }}">Settings</a> from the navigation bar to see:</p>
+                <ul>
+                    <li>Your email, account creation date, tier, and status.</li>
+                    <li>Your <strong>usage limits</strong> for the current 5-hour session and for the week, with reset times. See <a href="#api-limits">Usage limits</a>.</li>
+                    <li>The <strong>API Key</strong> section, where you can generate a key for the API. See <a href="#api-auth">Authentication</a>.</li>
+                </ul>
+
+                <div class="section-nav">
+                    <a href="#getting-started">← Getting Started</a>
+                    <a href="#ciphers">Next: How Ciphers Work →</a>
+                </div>
+            </div>
+
+            <!-- Ciphers -->
+            <div class="section help-section" id="ciphers">
+                <h2>How Ciphers Work</h2>
+
+                <h3>The cipher</h3>
+                <p>A cipher is a shuffled alphabet of the 26 letters <code>a</code>–<code>z</code>. Every letter maps to exactly one other letter. For example, with the cipher above, <code>a</code> becomes <code>q</code>, <code>b</code> becomes <code>w</code>, and so on. Uppercase letters stay uppercase, and spaces, digits, and punctuation are copied through unchanged.</p>
+
+                <h3>The secret key and decoy letters</h3>
+                <p>The key decides where <strong>decoy letters</strong> are inserted. Roughly one position in four gets an extra random letter after it, and the positions are chosen from the key. The decoder skips those letters, so decoding gives back the original text only when you use the <strong>same cipher and key</strong>.</p>
+
+                <div class="help-table-wrap">
+                    <table class="help-table">
+                        <tr><th>Plain message</th><th>Key</th><th>Encrypted output</th></tr>
+                        <tr><td><code>hello world</code></td><td><code>mysecret</code></td><td><code>itssgp vgksrz</code></td></tr>
+                        <tr><td><code>Hi, Bob!</code></td><td><code>key1</code></td><td><code>Io,e vWgwv!</code></td></tr>
+                    </table>
+                </div>
+                <p>Both examples use the cipher <code>["q","w","e",…]</code> from the API section, which maps <code>a</code> to <code>q</code>, <code>b</code> to <code>w</code>, and so on. Decoding either output with the same cipher and key returns the original message.</p>
+
+                <div class="help-note warning">
+                    This is a classical cipher. It is fine for puzzles, learning, and light privacy, but it is <strong>not secure</strong>. Do not use it to protect passwords, personal data, or anything that matters.
+                </div>
+
+                <div class="section-nav">
+                    <a href="#web-app">← Web App</a>
+                    <a href="#api">Next: API →</a>
+                </div>
+            </div>
+
+            <!-- API -->
+            <div class="section help-section" id="api">
+                <h2>Using the API</h2>
+
+                <p>Every cipher and conversion feature in the web app is also available over HTTP. Requests and responses use JSON. For the full reference with the same examples, see the <a href="{{ url_for('api_docs_page') }}">API Documentation</a> page.</p>
+
+                <h3 id="api-auth">Authentication</h3>
+                <p>There are two ways to authenticate:</p>
+                <ul>
+                    <li><strong>API key</strong> (for scripts and other programs). Generate a key in <a href="{{ url_for('settings_page') }}">Settings</a>, then send it on every request:
+                        <pre><code>X-API-Key: sk_your_api_key</code></pre>
+                    </li>
+                    <li><strong>Browser session</strong>. If you are logged in and calling from this site, your session cookie is enough.</li>
+                </ul>
+
+                <div class="help-note">
+                    <strong>Keep your key secret.</strong> The key is shown only once, right after you generate it, so copy it then. Generating a new key immediately invalidates the old one. Some endpoints accept only a browser session and reject API keys. The table below shows which.
+                </div>
+
+                <h3>Conventions</h3>
+                <ul>
+                    <li>Send <code>Content-Type: application/json</code> on requests that have a body.</li>
+                    <li>Most endpoints use <code>POST</code>. A few read-only endpoints use <code>GET</code>.</li>
+                    <li>Successful responses return <code>200</code> or <code>201</code>. Errors return a JSON object with an <code>error</code> message.</li>
+                    <li>The <code>cipher</code> field can be a JSON array of 26 letters, or the same list written as a string such as <code>"['q','w',…]"</code>.</li>
+                </ul>
+
+                <h3>Endpoints</h3>
+                <p>Endpoints marked <em>session or API key</em> accept either. Endpoints marked <em>session</em> need a logged-in browser session and reject <code>X-API-Key</code>.</p>
+
+                <div class="help-table-wrap">
+                    <table class="help-table">
+                        <tr><th>Endpoint</th><th>Method</th><th>Auth</th><th>Purpose</th></tr>
+                        <tr><td><code>/api/generate-cipher</code></td><td>POST</td><td>session or API key</td><td>Create a random cipher.</td></tr>
+                        <tr><td><code>/api/validate-cipher</code></td><td>POST</td><td>session or API key</td><td>Check a cipher is valid.</td></tr>
+                        <tr><td><code>/api/encode</code></td><td>POST</td><td>session or API key</td><td>Encrypt a message.</td></tr>
+                        <tr><td><code>/api/decode</code></td><td>POST</td><td>session or API key</td><td>Decrypt a message.</td></tr>
+                        <tr><td><code>/api/convert-base</code></td><td>POST</td><td>session</td><td>Convert a number between bases.</td></tr>
+                        <tr><td><code>/api/ascii-to-base</code></td><td>POST</td><td>session</td><td>Convert text to numbers in a base.</td></tr>
+                        <tr><td><code>/api/base-to-ascii</code></td><td>POST</td><td>session</td><td>Convert numbers in a base to text.</td></tr>
+                        <tr><td><code>/api/usage-limits</code></td><td>GET</td><td>session</td><td>Show your current usage.</td></tr>
+                        <tr><td><code>/api/generate-api-key</code></td><td>POST</td><td>session</td><td>Create a new API key.</td></tr>
+                    </table>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/generate-cipher</h4>
+                    <p>Returns a random shuffled alphabet. No body is needed.</p>
+<pre><code>curl -X POST https://curly-funicular-production.up.railway.app/api/generate-cipher \
+  -H "X-API-Key: sk_your_api_key"</code></pre>
+<pre><code>{
+  "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
+  "success": true
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/validate-cipher</h4>
+                    <p>Body: <code>cipher</code>. Returns <code>200</code> either way, with <code>valid</code> set to <code>true</code> or <code>false</code>.</p>
+<pre><code>curl -X POST https://curly-funicular-production.up.railway.app/api/validate-cipher \
+  -H "X-API-Key: sk_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]}'</code></pre>
+<pre><code>{
+  "valid": true,
+  "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/encode</h4>
+                    <p>Body: <code>cipher</code>, <code>message</code>, and <code>key</code>. The key cannot be empty.</p>
+<pre><code>curl -X POST https://curly-funicular-production.up.railway.app/api/encode \
+  -H "X-API-Key: sk_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
+    "message": "hello world",
+    "key": "mysecret"
+  }'</code></pre>
+<pre><code>{
+  "encrypted": "itssgp vgksrz"
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/decode</h4>
+                    <p>Body: <code>cipher</code>, <code>message</code> (the encrypted text), and <code>key</code>. Use the same cipher and key that were used to encode.</p>
+<pre><code>curl -X POST https://curly-funicular-production.up.railway.app/api/decode \
+  -H "X-API-Key: sk_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cipher": ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"],
+    "message": "itssgp vgksrz",
+    "key": "mysecret"
+  }'</code></pre>
+<pre><code>{
+  "decoded": "hello world"
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/convert-base</h4>
+                    <p>Session only. Body: <code>number</code> (a string), <code>from_base</code>, and <code>to_base</code>. Both bases must be from 2 to 36.</p>
+<pre><code>curl -X POST https://curly-funicular-production.up.railway.app/api/convert-base \
+  -H "Cookie: session=your_session_cookie" \
+  -H "Content-Type: application/json" \
+  -d '{"number": "ff", "from_base": 16, "to_base": 10}'</code></pre>
+<pre><code>{
+  "result": "255",
+  "success": true
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/ascii-to-base</h4>
+                    <p>Session only. Body: <code>text</code> and <code>base</code> (2 to 36). The result is each character's code converted to that base, separated by spaces.</p>
+<pre><code>{"text": "Hi", "base": 16}</code></pre>
+<pre><code>{
+  "result": "48 69",
+  "success": true
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/base-to-ascii</h4>
+                    <p>Session only. Body: <code>numbers</code> (space-separated, in the given base) and <code>base</code>. Each value must be between 0 and 127.</p>
+<pre><code>{"numbers": "48 69", "base": 16}</code></pre>
+<pre><code>{
+  "result": "Hi",
+  "success": true
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">GET</span>/api/usage-limits</h4>
+                    <p>Session only. Returns your current counts, maximums, and reset times.</p>
+<pre><code>{
+  "session_limit": {"current": 3, "max": 50, "percentage": 6, "reset_at": "2026-10-10T18:00:00"},
+  "weekly_limit":  {"current": 41, "max": 250, "percentage": 16, "reset_at": "2026-10-16T13:00:00"}
+}</code></pre>
+                </div>
+
+                <div class="endpoint-block">
+                    <h4><span class="method-tag">POST</span>/api/generate-api-key</h4>
+                    <p>Session only. Creates a new key and invalidates any previous one. The response includes the key once. Requests from a browser session also need an <code>X-CSRFToken</code> header. Get a token from <code>GET /api/csrf-token</code>.</p>
+<pre><code>{
+  "success": true,
+  "api_key": "sk_..."
+}</code></pre>
+                </div>
+
+                <h3 id="api-limits">Usage limits</h3>
+                <p>Every successful cipher or conversion request counts toward two limits, whichever way you authenticate: a <strong>session</strong> limit that resets 5 hours after it starts, and a <strong>weekly</strong> limit that resets 7 days after it starts. Requests that fail do not count. Your tier sets the maximums:</p>
+
+                <div class="help-table-wrap">
+                    <table class="help-table">
+                        <tr><th>Tier</th><th>Session (5 hours)</th><th>Weekly</th></tr>
+                        <tr><td>Default</td><td>50</td><td>250</td></tr>
+                        <tr><td>Trusted</td><td>75</td><td>375</td></tr>
+                        <tr><td>Pro</td><td>25</td><td>125</td></tr>
+                        <tr><td>Superuser</td><td>Unlimited</td><td>Unlimited</td></tr>
+                    </table>
+                </div>
+                <p>Your current tier and usage are shown in <a href="{{ url_for('settings_page') }}">Settings</a>. Note that <code>/api/validate-cipher</code> returns <code>200</code> even when the cipher is invalid, so that call still counts.</p>
+
+                <h3 id="api-errors">Errors</h3>
+                <div class="help-table-wrap">
+                    <table class="help-table">
+                        <tr><th>Status</th><th>Meaning</th><th>Example message</th></tr>
+                        <tr><td><code>400</code></td><td>Missing or invalid input.</td><td><code>Key cannot be empty</code>, <code>Base must be between 2 and 36</code>, <code>Cipher must contain exactly 26 letters</code></td></tr>
+                        <tr><td><code>401</code></td><td>No valid session or API key.</td><td><code>Unauthorized. Please log in or provide a valid API key in the X-API-Key header.</code></td></tr>
+                        <tr><td><code>403</code></td><td>The account has been banned.</td><td><code>This account has been banned.</code></td></tr>
+                        <tr><td><code>429</code></td><td>Usage limit reached, or too many requests.</td><td><code>Session limit reached. Resets in 2h 15m</code></td></tr>
+                        <tr><td><code>500</code></td><td>Something went wrong on the server.</td><td>The error text is returned.</td></tr>
+                    </table>
+                </div>
+
+                <h3 id="api-examples">Example: round trip in Python</h3>
+                <p>This script generates a cipher, encodes a message, and decodes it again. It uses the <code>requests</code> package.</p>
+<pre><code>import requests
+
+BASE = "https://curly-funicular-production.up.railway.app"
+HEADERS = {"X-API-Key": "sk_your_api_key", "Content-Type": "application/json"}
+KEY = "mysecret"
+
+cipher = requests.post(f"{BASE}/api/generate-cipher", headers=HEADERS).json()["cipher"]
+
+encoded = requests.post(f"{BASE}/api/encode", headers=HEADERS, json={
+    "cipher": cipher, "message": "hello world", "key": KEY,
+}).json()["encrypted"]
+
+decoded = requests.post(f"{BASE}/api/decode", headers=HEADERS, json={
+    "cipher": cipher, "message": encoded, "key": KEY,
+}).json()["decoded"]
+
+print(encoded, "->", decoded)</code></pre>
+                <p>In real code, check <code>response.ok</code> before reading the JSON, so a <code>401</code> or <code>429</code> does not cause a confusing <code>KeyError</code>.</p>
+
+                <div class="section-nav">
+                    <a href="#ciphers">← How Ciphers Work</a>
+                    <a href="#troubleshooting">Next: Troubleshooting →</a>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="section help-section" id="troubleshooting">
+                <h2>Troubleshooting</h2>
+
+                <h3>"Session expired. Please reload…" or actions stop working</h3>
+                <p>Your login session has ended. Reload the page and log in again.</p>
+
+                <h3>"Session limit reached" or "Weekly limit reached"</h3>
+                <p>You have used your allowance for the current window. The message shows when it resets. You can check your usage in <a href="{{ url_for('settings_page') }}">Settings</a>.</p>
+
+                <h3>"Invalid email or password" and then a block</h3>
+                <p>Check your email and password. After 5 failed attempts from the same IP address, logins from that address are blocked for 24 hours. Wait for the countdown to finish, or try again from a different network.</p>
+
+                <h3>"Your account has been restricted" or "This account has been banned"</h3>
+                <p>An administrator has restricted this account. Contact the site administrator if you think this is a mistake.</p>
+
+                <h3>"Cipher must contain exactly 26 letters" or "All letters must be unique"</h3>
+                <p>A cipher needs all 26 letters <code>a</code>–<code>z</code>, each used exactly once. Use <strong>Generate Random Cipher</strong> if you are not sure how to write one.</p>
+
+                <h3>Decoding gives garbage</h3>
+                <p>Check that you used the exact same cipher and key that were used to encode. Any change to either, including an extra space or a different letter case in the key, produces different output.</p>
+
+                <h3>"Invalid number for base N"</h3>
+                <p>The number contains a digit that is not allowed in that base. For example, <code>G</code> is not valid in base 16. Check the number and its base.</p>
+
+                <div class="section-nav">
+                    <a href="#api">← API</a>
+                    <a href="#getting-started">Back to top ↑</a>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><a href="{{ url_for('index') }}">← Back to App</a></p>
+        </footer>
+    </div>
+</body>
+</html>

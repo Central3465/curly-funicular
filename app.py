@@ -313,6 +313,10 @@ def api_docs_page():
         return redirect(url_for('login_page'))
     return render_template('api.html')
 
+@app.route('/help')
+def help_page():
+    return render_template('help.html')
+
 from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp
 
 app.register_blueprint(auth_bp)
