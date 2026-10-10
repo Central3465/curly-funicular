@@ -57,14 +57,14 @@ cp .env.example .env
 # Edit .env with your MongoDB and Redis URLs
 ```
 
-5. Start the application:
-```bash
-python app.py
-```
-
-6. Start Redis server:
+5. Start Redis server:
 ```bash
 sudo service redis-server start
+```
+
+6. Start the application:
+```bash
+python app.py
 ```
 
 The application will be available at `http://localhost:5000`.
