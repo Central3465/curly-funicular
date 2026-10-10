@@ -381,6 +381,10 @@
             deleteAccountBtn.disabled = deleteConfirmInput.value.trim() !== 'I WANT TO DELETE MY ACCOUNT';
         });
 
+        ['paste', 'cut', 'drop'].forEach(evt =>
+            deleteConfirmInput.addEventListener(evt, e => e.preventDefault())
+        );
+
         deleteAccountBtn.addEventListener('click', function() {
             if (deleteConfirmInput.value.trim() !== 'I WANT TO DELETE MY ACCOUNT') {
                 return;
