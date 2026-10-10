@@ -2,6 +2,7 @@ from flask import jsonify, session, request, g
 from functools import wraps
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 import hashlib
 
 
@@ -37,11 +38,50 @@ def get_tier_limits(tier):
     return session_limit, weekly_limit
 
 
+def check_account_access(user_id):
+    """Returns (message, status) if this account may not make requests, or None if it may."""
+    from app import users_collection
+
+    if users_collection is None:
+        return 'Service unavailable. Please try again later.', 503
+
+    try:
+        user = users_collection.find_one({'_id': ObjectId(user_id)})
+    except InvalidId:
+        user = None
+
+    if not user:
+        return 'Unauthorized. Please log in.', 401
+
+    if user.get('banned'):
+        return 'This account has been banned.', 403
+
+    return None
+
+
+def check_session_account(user_id):
+    """Returns an error response if the logged-in account may not make requests, else None.
+    Clears the session when the account is banned or no longer exists."""
+    access_error = check_account_access(user_id)
+    if not access_error:
+        return None
+
+    message, status = access_error
+    if status != 503:
+        session.clear()
+    return jsonify({'error': message}), status
+
+
 def require_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('user_id'):
+        user_id = session.get('user_id')
+        if not user_id:
             return jsonify({'error': 'Unauthorized. Please log in.'}), 401
+
+        error_response = check_session_account(user_id)
+        if error_response:
+            return error_response
         return f(*args, **kwargs)
     return decorated_function
 
@@ -62,6 +102,9 @@ def require_auth_or_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get('user_id'):
+            error_response = check_session_account(session.get('user_id'))
+            if error_response:
+                return error_response
             return f(*args, **kwargs)
 
         api_key = request.headers.get('X-API-Key')
@@ -71,6 +114,8 @@ def require_auth_or_api_key(f):
             if users_collection is not None:
                 user = users_collection.find_one({'api_key_hash': hash_api_key(api_key)})
                 if user:
+                    if user.get('banned'):
+                        return jsonify({'error': 'This account has been banned.'}), 403
                     g.api_user_id = str(user['_id'])
                     return f(*args, **kwargs)
 
