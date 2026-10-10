@@ -5,398 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <title>Account Settings - Cipher App</title>
-    <style>
-        :root {
-            --bg-primary: #faf7f2;
-            --bg-secondary: #ffffff;
-            --text-primary: #1e1e1e;
-            --text-secondary: #5a4a3a;
-            --border-color: #e0d6cc;
-            --primary-color: #d9730d;
-            --primary-hover: #b35f00;
-            --error-color: #dc3545;
-            --success-color: #28a745;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #1a1a1a;
-                --bg-secondary: #2d2d2d;
-                --text-primary: #e8e8e8;
-                --text-secondary: #b8b8b8;
-                --border-color: #404040;
-                --primary-color: #e8a540;
-                --primary-hover: #f0b656;
-                --error-color: #ff6b6b;
-                --success-color: #51cf66;
-            }
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
-            padding: 16px;
-        }
-
-        .settings-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-container h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .nav-header {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        .nav-header h2 {
-            text-align: left;
-            margin-bottom: 0;
-            font-size: 1.5rem;
-        }
-
-        .nav-header a {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .nav-header a:hover {
-            text-decoration: underline;
-            color: var(--primary-color);
-        }
-
-        .error-message {
-            background: var(--error-color);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .success-message {
-            background: var(--success-color);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .user-info {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .user-info p {
-            margin: 12px 0;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .user-info strong {
-            color: var(--primary-color);
-            display: inline-block;
-            min-width: 140px;
-            font-weight: 600;
-        }
-
-        .usage-limits-section {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .usage-limits-section h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-        }
-
-        .limit-item {
-            margin-bottom: 24px;
-        }
-
-        .limit-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .limit-label {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            gap: 6px;
-        }
-
-        .limit-label strong {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        .limit-stats {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 24px;
-            background: var(--bg-secondary);
-            border-radius: 5px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            transition: width 0.3s ease;
-            min-width: 30px;
-        }
-
-        .progress-fill.warning {
-            background: #e07b1a;
-        }
-
-        .progress-fill.danger {
-            background: #c45a00;
-        }
-
-        .reset-time {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .api-key-section {
-            background: var(--bg-primary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
-        .api-key-section h3 {
-            margin-top: 0;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-        }
-
-        .api-key-status {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-        }
-
-        .api-key-rules {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 14px;
-            margin-bottom: 16px;
-        }
-
-        .api-key-rules p {
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .rule-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 0.85rem;
-            margin-bottom: 10px;
-            color: var(--text-secondary);
-        }
-
-        .rule-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .rule-item input[type="checkbox"] {
-            margin-top: 3px;
-            flex-shrink: 0;
-        }
-
-        .api-key-display {
-            display: none;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 12px;
-            margin-top: 14px;
-            word-break: break-all;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        .api-key-warning {
-            display: none;
-            font-size: 0.8rem;
-            color: var(--error-color);
-            margin-top: 8px;
-            font-weight: 600;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            min-width: 60px;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn-danger {
-            background: var(--error-color);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        @media (max-width: 768px) {
-            .settings-container {
-                margin: 10px;
-                padding: 15px;
-            }
-
-            .settings-container h2,
-            .nav-header h2 {
-                font-size: 1.25rem;
-                margin-bottom: 15px;
-            }
-
-            .nav-header {
-                flex-direction: column;
-            }
-
-            .nav-header a {
-                font-size: 0.85rem;
-            }
-
-            .user-info {
-                padding: 15px;
-            }
-
-            .user-info p {
-                font-size: 0.9rem;
-                flex-direction: column;
-                gap: 2px;
-            }
-
-            .user-info strong {
-                min-width: auto;
-                display: block;
-            }
-
-            .usage-limits-section {
-                padding: 15px;
-            }
-
-            .btn {
-                padding: 12px 16px;
-                font-size: 13px;
-                min-width: 70px;
-                display: block;
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
-            .btn:last-child {
-                margin-bottom: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .limit-label {
-                flex-direction: column;
-                gap: 2px;
-            }
-
-            .progress-bar {
-                height: 20px;
-            }
-
-            .progress-fill {
-                font-size: 0.7rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
 </head>
 <body>
     <div class="settings-container">
@@ -472,6 +81,23 @@
                 <button id="generate-api-key-btn" class="btn btn-primary" disabled>Generate New API Key</button>
                 <div class="api-key-display" id="api-key-display"></div>
                 <div class="api-key-warning" id="api-key-warning">Copy this key now — it won't be shown again.</div>
+            </div>
+
+            <div class="data-section">
+                <h3>📦 Your Data</h3>
+                <p class="section-description">Download a copy of your account information, usage, and API key status as a JSON file.</p>
+                <button id="export-data-btn" class="btn btn-secondary">Export My Data</button>
+            </div>
+
+            <div class="danger-zone">
+                <h3>🗑️ Delete Account</h3>
+                <p class="section-description">Deleting your account is permanent. Your data and any API key will be removed and cannot be recovered. Export your data first if you want to keep a copy.</p>
+                <label class="delete-confirm-label" for="delete-confirm-input">
+                    Type <strong>I WANT TO DELETE MY ACCOUNT</strong> to confirm:
+                </label>
+                <input type="text" id="delete-confirm-input" class="delete-confirm-input" autocomplete="off">
+                <button id="delete-account-btn" class="btn btn-danger" disabled>Delete My Account</button>
+                <div class="delete-notice" id="delete-notice"></div>
             </div>
 
             <button id="logout-btn" class="btn btn-danger">Log Out</button>
@@ -698,6 +324,76 @@
                 errorDiv.textContent = 'Error generating API key: ' + error.message;
                 errorDiv.style.display = 'block';
             }
+        });
+
+        document.getElementById('export-data-btn').addEventListener('click', async function() {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.style.display = 'none';
+            try {
+                const endpoints = ['/api/user-data', '/api/usage-limits', '/api/api-key-status'];
+                const responses = await Promise.all(endpoints.map(url => fetch(url)));
+
+                if (responses.some(r => r.status === 401)) {
+                    window.location.href = '/login';
+                    return;
+                }
+                if (responses.some(r => !r.ok)) {
+                    throw new Error('Could not load all of your data');
+                }
+
+                const [account, usage, apiKey] = await Promise.all(responses.map(r => r.json()));
+                const exportData = {
+                    exported_at: new Date().toISOString(),
+                    account,
+                    usage_limits: usage,
+                    api_key: apiKey
+                };
+
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'cipher-account-data.json';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                errorDiv.textContent = 'Error exporting data: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        const deleteConfirmInput = document.getElementById('delete-confirm-input');
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
+        const deleteNotice = document.getElementById('delete-notice');
+
+        deleteConfirmInput.addEventListener('input', function() {
+            deleteAccountBtn.disabled = deleteConfirmInput.value.trim() !== 'I WANT TO DELETE MY ACCOUNT';
+        });
+
+        deleteAccountBtn.addEventListener('click', function() {
+            if (deleteConfirmInput.value.trim() !== 'I WANT TO DELETE MY ACCOUNT') {
+                return;
+            }
+            if (!window.confirm('Permanently delete your account? This cannot be undone.')) {
+                return;
+            }
+            fetch('/api/delete-account', { method: 'POST', headers: getHeaders() })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    if (!response.ok) {
+                        return response.json().then(data => { throw new Error(data.error || 'Failed to delete account'); });
+                    }
+                    window.location.href = '/goodbye';
+                })
+                .catch(error => {
+                    deleteNotice.textContent = 'Error deleting account: ' + error.message;
+                    deleteNotice.style.display = 'block';
+                });
         });
 
         document.getElementById('logout-btn').addEventListener('click', async function() {

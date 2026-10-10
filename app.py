@@ -282,6 +282,10 @@ def index():
 def credits():
     return render_template('credits.html')
 
+@app.route('/goodbye')
+def goodbye():
+    return render_template('goodbye.html')
+
 @app.route('/version')
 def request_access():
     return render_template('version.html')

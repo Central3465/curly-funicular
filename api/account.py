@@ -110,3 +110,21 @@ def generate_api_key():
     )
 
     return jsonify({'success': True, 'api_key': api_key})
+
+@account_bp.route('/api/delete-account', methods=['POST'])
+@require_auth
+def delete_account():
+    from app import users_collection
+
+    if users_collection is None:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User not authenticated'}), 401
+
+    users_collection.delete_one({'_id': ObjectId(user_id)})
+
+    session.clear()
+
+    return jsonify({'success': True, 'message': 'Account deleted.'})
