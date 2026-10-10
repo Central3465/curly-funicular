@@ -56,6 +56,8 @@
                     </div>
                     <div class="reset-time" id="weekly-reset-time"></div>
                 </div>
+                
+                <p id="usage-tip">To get higher usage limits, you can upgrade your account to a higher tier by complying with our terms of service.</p> 
             </div>
 
             <div class="api-key-section">
@@ -225,6 +227,13 @@
                 document.getElementById('user-email').textContent = data.email;
                 document.getElementById('user-created-at').textContent = data.created_at;
                 document.getElementById('user-tier').textContent = data.tier_name || 'Unknown';
+                
+                const usageTip = document.getElementById('usage-tip').textContent;
+                if (data.tier_name === 'Default' && 'Trusted' && 'Pro') {
+                    document.getElementById('usage-tip').textContent = 'You can upgrade to a higher tier by completing quests and complying with our terms of service.';
+                } else {
+                    document.getElementById('usage-tip').textContent = 'You are on the highest tier. Enjoy unlimited usage!';
+                }
 
                 const statusSpan = document.getElementById('user-status');
                 if (data.banned) {
