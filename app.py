@@ -14,9 +14,13 @@ from pymongo.errors import ConnectionFailure
 from bson.objectid import ObjectId
 import redis
 
+# fix client ip spoofing by using Werkzeug's proxyfix
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 load_dotenv()
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.secret_key = os.getenv('SECRET_KEY')
 csrf = CSRFProtect(app)
 
@@ -73,12 +77,8 @@ LOCKOUT_DURATION = timedelta(hours=24)
 ACCESS_REQUEST_LIMIT = 1
 ACCESS_REQUEST_WINDOW = timedelta(minutes=1)
 
-
 def get_client_ip():
-    if request.headers.get('X-Forwarded-For'):
-        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr
-
 
 def is_ip_blocked(ip):
     if not redis_client:
