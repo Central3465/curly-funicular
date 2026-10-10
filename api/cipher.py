@@ -1,14 +1,14 @@
-from flask import jsonify, request, session
+from flask import jsonify, request
 from cipher import decode_message, validate_cipher, encode_message, create_random_cipher
 from api import cipher_bp
-from utils import require_auth, track_usage, check_usage_limits
+from utils import require_auth_or_api_key, track_usage, check_usage_limits, get_authenticated_user_id
 
 
 @cipher_bp.route('/api/validate-cipher', methods=['POST'])
-@require_auth
+@require_auth_or_api_key
 @track_usage
 def validate_cipher_endpoint():
-    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
         return jsonify({'error': error_msg}), 429
 
@@ -24,10 +24,10 @@ def validate_cipher_endpoint():
 
 
 @cipher_bp.route('/api/decode', methods=['POST'])
-@require_auth
+@require_auth_or_api_key
 @track_usage
 def decode_endpoint():
-    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
         return jsonify({'error': error_msg}), 429
 
@@ -52,10 +52,10 @@ def decode_endpoint():
 
 
 @cipher_bp.route('/api/generate-cipher', methods=['POST'])
-@require_auth
+@require_auth_or_api_key
 @track_usage
 def generate_cipher_endpoint():
-    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
         return jsonify({'error': error_msg}), 429
 
@@ -67,10 +67,10 @@ def generate_cipher_endpoint():
 
 
 @cipher_bp.route('/api/encode', methods=['POST'])
-@require_auth
+@require_auth_or_api_key
 @track_usage
 def encode_endpoint():
-    can_proceed, error_msg = check_usage_limits(session.get('user_id'))
+    can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
     if not can_proceed:
         return jsonify({'error': error_msg}), 429
 

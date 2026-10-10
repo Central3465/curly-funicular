@@ -53,6 +53,7 @@ try:
     db = client['cipher_app']
     users_collection = db['users']
     users_collection.create_index('email', unique=True)
+    users_collection.create_index('api_key_hash', unique=True, sparse=True)
 except ConnectionFailure as e:
     print(f"Failed to connect to MongoDB: {e}")
     db = None
@@ -306,8 +307,11 @@ def settings_page():
 def admin_page():
     return render_template('admin.html')
 
-
-
+@app.route('/api')
+def api_docs_page():
+    if not session.get('user_id'):
+        return redirect(url_for('login_page'))
+    return render_template('api.html')
 
 from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp
 

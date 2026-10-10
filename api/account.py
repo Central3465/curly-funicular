@@ -1,11 +1,13 @@
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, session
 from flask_mail import Message
 from datetime import datetime, timedelta
+from bson.objectid import ObjectId
 import requests
 import os
 import secrets
 import bcrypt
 from api import account_bp
+from utils import require_auth, hash_api_key
 
 
 def send_verification_email(mail, email, full_name, verification_token):
@@ -146,3 +148,43 @@ def check_ip_ban():
         })
 
     return jsonify({'banned': False})
+
+
+@account_bp.route('/api/api-key-status', methods=['GET'])
+@require_auth
+def api_key_status():
+    from app import users_collection
+
+    if users_collection is None:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))})
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    created_at = user.get('api_key_created_at')
+    if isinstance(created_at, datetime):
+        created_at = created_at.strftime('%Y-%m-%d %H:%M:%S')
+
+    return jsonify({'has_key': bool(user.get('api_key_hash')), 'created_at': created_at})
+
+
+@account_bp.route('/api/generate-api-key', methods=['POST'])
+@require_auth
+def generate_api_key():
+    from app import users_collection
+
+    if users_collection is None:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    api_key = f"sk_{secrets.token_urlsafe(32)}"
+
+    users_collection.update_one(
+        {'_id': ObjectId(session.get('user_id'))},
+        {'$set': {
+            'api_key_hash': hash_api_key(api_key),
+            'api_key_created_at': datetime.now()
+        }}
+    )
+
+    return jsonify({'success': True, 'api_key': api_key})

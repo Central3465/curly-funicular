@@ -213,6 +213,84 @@
             margin-top: 4px;
         }
 
+        .api-key-section {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .api-key-section h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+
+        .api-key-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .api-key-rules {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+
+        .api-key-rules p {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .rule-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .rule-item input[type="checkbox"] {
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .api-key-display {
+            display: none;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 12px;
+            margin-top: 14px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .api-key-warning {
+            display: none;
+            font-size: 0.8rem;
+            color: var(--error-color);
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn {
             padding: 10px 16px;
             border: none;
@@ -325,6 +403,7 @@
         <div class="nav-header">
             <h2>⚙️ Account Settings</h2>
             <a href="/">← Back to App</a>
+            <a href="/api">📄 API Documentation</a>
         </div>
         
         <div id="error-message" class="error-message"></div>
@@ -368,6 +447,31 @@
                     </div>
                     <div class="reset-time" id="weekly-reset-time"></div>
                 </div>
+            </div>
+
+            <div class="api-key-section">
+                <h3>🔑 API Key</h3>
+                <div class="api-key-status" id="api-key-status">Loading API key status...</div>
+
+                <div class="api-key-rules">
+                    <p>Before generating a key, confirm:</p>
+                    <label class="rule-item">
+                        <input type="checkbox" id="rule-secret">
+                        <span>I will keep my API key secret and never share it or commit it to a public repository.</span>
+                    </label>
+                    <label class="rule-item">
+                        <input type="checkbox" id="rule-limits">
+                        <span>I understand requests made with my API key count against my account's usage limits above.</span>
+                    </label>
+                    <label class="rule-item">
+                        <input type="checkbox" id="rule-revoke">
+                        <span>I understand generating a new key immediately invalidates any previous key.</span>
+                    </label>
+                </div>
+
+                <button id="generate-api-key-btn" class="btn btn-primary" disabled>Generate New API Key</button>
+                <div class="api-key-display" id="api-key-display"></div>
+                <div class="api-key-warning" id="api-key-warning">Copy this key now — it won't be shown again.</div>
             </div>
 
             <button id="logout-btn" class="btn btn-danger">Log Out</button>
@@ -506,6 +610,7 @@
                 }
 
                 await loadUsageLimits();
+                await loadApiKeyStatus();
             } catch (error) {
                 const errorDiv = document.getElementById('error-message');
                 errorDiv.textContent = 'Error loading user data: ' + error.message;
@@ -513,7 +618,88 @@
                 document.getElementById('loading').style.display = 'none';
             }
         }
-        
+
+        async function loadApiKeyStatus() {
+            const statusDiv = document.getElementById('api-key-status');
+            try {
+                const response = await fetch('/api/api-key-status');
+
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    statusDiv.textContent = 'Could not load API key status.';
+                    return;
+                }
+
+                const data = await response.json();
+                statusDiv.textContent = data.has_key
+                    ? `An API key is active (created ${data.created_at}).`
+                    : 'No API key generated yet.';
+            } catch (error) {
+                statusDiv.textContent = 'Could not load API key status.';
+            }
+        }
+
+        const ruleCheckboxes = [
+            document.getElementById('rule-secret'),
+            document.getElementById('rule-limits'),
+            document.getElementById('rule-revoke')
+        ];
+        const generateApiKeyBtn = document.getElementById('generate-api-key-btn');
+
+        function updateGenerateButtonState() {
+            generateApiKeyBtn.disabled = !ruleCheckboxes.every(cb => cb.checked);
+        }
+
+        ruleCheckboxes.forEach(cb => cb.addEventListener('change', updateGenerateButtonState));
+
+        generateApiKeyBtn.addEventListener('click', async function() {
+            if (!ruleCheckboxes.every(cb => cb.checked)) {
+                return;
+            }
+
+            const hasExistingKey = document.getElementById('api-key-status').textContent.startsWith('An API key is active');
+            const confirmMessage = hasExistingKey
+                ? 'This will immediately invalidate your current API key. Continue?'
+                : 'Generate a new API key?';
+            if (!window.confirm(confirmMessage)) {
+                return;
+            }
+
+            const displayDiv = document.getElementById('api-key-display');
+            const warningDiv = document.getElementById('api-key-warning');
+            try {
+                const response = await fetch('/api/generate-api-key', { method: 'POST', headers: getHeaders() });
+
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate API key');
+                }
+
+                displayDiv.textContent = data.api_key;
+                displayDiv.style.display = 'block';
+                warningDiv.style.display = 'block';
+
+                ruleCheckboxes.forEach(cb => { cb.checked = false; });
+                updateGenerateButtonState();
+
+                await loadApiKeyStatus();
+            } catch (error) {
+                const errorDiv = document.getElementById('error-message');
+                errorDiv.textContent = 'Error generating API key: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+
         document.getElementById('logout-btn').addEventListener('click', async function() {
             try {
                 await fetch('/api/logout', { method: 'POST', headers: getHeaders() });

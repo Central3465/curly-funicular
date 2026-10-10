@@ -1,7 +1,8 @@
-from flask import jsonify, session
+from flask import jsonify, session, request, g
 from functools import wraps
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
+import hashlib
 
 
 # Tier constants
@@ -45,15 +46,47 @@ def require_auth(f):
     return decorated_function
 
 
+def hash_api_key(api_key):
+    return hashlib.sha256(api_key.encode('utf-8')).hexdigest()
+
+
+def get_authenticated_user_id():
+    """Returns the logged-in session user_id, or the user_id resolved from an API key, if any."""
+    if session.get('user_id'):
+        return session.get('user_id')
+    return getattr(g, 'api_user_id', None)
+
+
+def require_auth_or_api_key(f):
+    """Like require_auth, but also accepts an X-API-Key header in place of a session login."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user_id'):
+            return f(*args, **kwargs)
+
+        api_key = request.headers.get('X-API-Key')
+        if api_key:
+            from app import users_collection
+
+            if users_collection is not None:
+                user = users_collection.find_one({'api_key_hash': hash_api_key(api_key)})
+                if user:
+                    g.api_user_id = str(user['_id'])
+                    return f(*args, **kwargs)
+
+        return jsonify({'error': 'Unauthorized. Please log in or provide a valid API key in the X-API-Key header.'}), 401
+    return decorated_function
+
+
 def track_usage(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         from app import users_collection
 
-        if not session.get('user_id') or users_collection is None:
+        user_id = get_authenticated_user_id()
+        if not user_id or users_collection is None:
             return f(*args, **kwargs)
 
-        user_id = session.get('user_id')
         user = users_collection.find_one({'_id': ObjectId(user_id)})
 
         if not user:
