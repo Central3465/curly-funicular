@@ -34,15 +34,17 @@ def login():
     data = request.get_json()
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
+    admin = data.get('isAdmin', False)
     ip = data.get('ip_address', 'None')
 
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
 
-    if client_ip != ip:
-        return jsonify({
-            'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
-        }), 400
+    if not isAdmin:
+        if client_ip != ip:
+            return jsonify({
+                'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
+            }), 400
 
     user = users_collection.find_one({'email': email})
 

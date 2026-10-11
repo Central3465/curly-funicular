@@ -20,6 +20,7 @@ def register():
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
     confirm_password = data.get('confirmPassword', '')
+    admin = data.get('isAdmin', False)
     data_ip = data.get('ip_address', 'None')
 
     if data_ip == client_ip:
