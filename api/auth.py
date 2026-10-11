@@ -1,5 +1,5 @@
 from flask import jsonify, session, request
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 import bcrypt
@@ -73,8 +73,10 @@ def login():
     session['user_id'] = str(user['_id'])
     session['email'] = user['email']
     session['isAdmin'] = user.get('isAdmin', False)
+    created_at = user.get('created_at')
+    is_new_account = isinstance(created_at, datetime) and datetime.now() - created_at < timedelta(days=3)
 
-    return jsonify({'success': True, 'message': 'Login successful'})
+    return jsonify({'success': True, 'message': 'Login successful', 'is_new_account': is_new_account}), 200
 
 
 @auth_bp.route('/api/logout', methods=['POST'])

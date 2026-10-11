@@ -130,7 +130,12 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    window.location.href = '/';
+                    const is_new_account = data.is_new_account || false;
+                    if (is_new_account == true) {
+                        window.location.href = '/help';
+                    } else {    
+                        window.location.href = '/';
+                    }
                 } else {
                     errorDiv.textContent = data.error;
                     errorDiv.style.display = 'block';

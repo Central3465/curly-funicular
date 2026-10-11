@@ -215,7 +215,7 @@
             .getElementById("email")
             .value.trim()
             .toLowerCase();
-          const birthday = document.getElementById("birthday").value;
+          //const birthday = document.getElementById("birthday").value;
           const password = document.getElementById("password").value;
           const confirmPassword =
             document.getElementById("confirmPassword").value;
@@ -233,7 +233,6 @@
               body: JSON.stringify({
                 fullName,
                 email,
-                birthday,
                 password,
                 confirmPassword,
               }),

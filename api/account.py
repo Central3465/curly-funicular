@@ -72,7 +72,6 @@ def register():
         'tier': 0,
         'api_key_created_at': None,
         'ip_address': client_ip,
-        'birthday': birthday,
     }
 
     users_collection.insert_one(user_doc)
