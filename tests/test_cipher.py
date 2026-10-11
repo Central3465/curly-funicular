@@ -77,7 +77,8 @@ class TestValidateCipher(unittest.TestCase):
         cipher = list("aabcdefghijklmnopqrstuvwxy")  # 'a' appears twice
         is_valid, message = validate_cipher(cipher)
         self.assertFalse(is_valid)
-        self.assertIn("unique", message.lower())
+        self.assertIn("duplicate", message.lower())
+        self.assertIn("a", message)  
 
     def test_invalid_non_letter(self):
         """Test with non-letter characters."""
