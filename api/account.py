@@ -1,4 +1,5 @@
 from flask import jsonify, request, url_for, session
+from datetime import date
 from flask_mail import Message
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
@@ -8,6 +9,16 @@ import secrets
 import bcrypt
 from api import account_bp
 from utils import require_auth, hash_api_key
+
+def is_over_13(birthday_str) -> bool:
+    if not isinstance(birthday_str, str):
+        raise ValueError('Birthday must be a date string')
+    birthday = date.fromisoformat(birthday_str.strip())
+    today = date.today()
+    age = today.year - birthday.year - (
+        (today.month, today.day) < (birthday.month, birthday.day)
+    )
+    return age >= 13
 
 @account_bp.route('/api/register', methods=['POST'])
 def register():
@@ -20,11 +31,19 @@ def register():
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
     confirm_password = data.get('confirmPassword', '')
-    admin = data.get('isAdmin', False)
-    data_ip = data.get('ip_address', 'None')
+    birthday = data.get('birthday', '')
 
-    if data_ip == client_ip:
-        return jsonify({'error': 'Alt accounds are not allowed'}), 400
+    user = users_collection.find_one({'email': email})
+    if user and user.get('ip_address') != client_ip:
+        return jsonify({
+            'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
+        }), 400
+
+    try:
+        if not is_over_13(birthday):
+            return jsonify({"error": "You must be 13 or older to register in compliance with our privacy policy."}), 403
+    except ValueError:
+        return jsonify({"error": "Invalid date."}), 400
 
     if not full_name or not email or not password or not confirm_password:
         return jsonify({'error': 'All fields are required'}), 400
@@ -53,6 +72,7 @@ def register():
         'tier': 0,
         'api_key_created_at': None,
         'ip_address': client_ip,
+        'birthday': birthday,
     }
 
     users_collection.insert_one(user_doc)

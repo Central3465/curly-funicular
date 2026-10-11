@@ -132,6 +132,16 @@
 
       <form id="registerForm">
         <div class="form-group">
+          <label for="birthday">Birthday</label>
+          <input
+            type="date"
+            id="birthday"
+            name="birthday"
+            required
+          />
+        </div>
+
+        <div class="form-group">
           <label for="fullName">Full Name</label>
           <input
             type="text"
@@ -203,6 +213,7 @@
             .getElementById("email")
             .value.trim()
             .toLowerCase();
+          const birthday = document.getElementById("birthday").value;
           const password = document.getElementById("password").value;
           const confirmPassword =
             document.getElementById("confirmPassword").value;
@@ -220,6 +231,7 @@
               body: JSON.stringify({
                 fullName,
                 email,
+                birthday,
                 password,
                 confirmPassword,
               }),

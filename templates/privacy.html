@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Privacy Policy - Cypher Encoder & Decoder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .privacy-section h3 {
+            font-size: 1.15rem;
+            margin: 24px 0 10px;
+            color: var(--text-primary);
+        }
+
+        .privacy-section h3:first-child {
+            margin-top: 0;
+        }
+
+        .privacy-section p,
+        .privacy-section li {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .privacy-section ul {
+            margin: 0 0 12px 22px;
+        }
+
+        .privacy-section li {
+            margin-bottom: 6px;
+        }
+
+        .privacy-section .updated {
+            color: var(--text-secondary, var(--text-primary));
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Privacy Policy</h1>
+            <p class="updated">Last updated: 11.10.2026</p>
+        </header>
+
+        <div class="privacy-section">
+            <h3>1. Who we are</h3>
+            <p>This policy explains what personal information the Cypher Encoder & Decoder website ("the site", "we") collects, why we collect it, and what we do with it. Questions about this policy can be sent to <strong>privacy@bai.studio</strong>.</p>
+
+            <h3>2. Information we collect</h3>
+            <p>We collect the following when you create an account and use the site:</p>
+            <ul>
+                <li><strong>Account details:</strong> your full name and email address, which you enter when you register.</li>
+                <li><strong>Password:</strong> we never store your password as typed. It is stored only as a bcrypt hash, which we cannot reverse.</li>
+                <li><strong>IP address:</strong> we log the IP address you register from and the IP address of each login attempt. We use it to enforce our same-address login check, to limit repeated failed logins, and to block abuse. Failed-attempt counts are kept per IP address.</li>
+                <li><strong>Account status and activity:</strong> the date your account was created, your usage tier, and whether your account has been restricted by an administrator.</li>
+                <li><strong>API keys:</strong> if you generate an API key, we store only a SHA-256 hash of it, plus the date it was created. We cannot show you the key again after it is generated.</li>
+                <li><strong>Session cookie:</strong> when you log in, the site stores a session cookie containing your user ID, email address, and admin flag so that you stay logged in.</li>
+            </ul>
+            <p>Text, ciphers, and keys you submit for encoding or decoding are processed to return a result. These inputs are not logged or retained, they are deleted upon refresh.</p>
+
+            <h3>3. How we use your information</h3>
+            <ul>
+                <li>To create and run your account and to let you log in.</li>
+                <li>To check that a login comes from the same IP address you registered with.</li>
+                <li>To protect the site against brute-force attempts, alt accounts, and other abuse, including temporary and permanent IP-based blocks.</li>
+                <li>To apply usage limits and tiers to your account.</li>
+                <li>To respond to support requests and to enforce these terms.</li>
+            </ul>
+
+            <h3>4. Legal basis</h3>
+            <p>We process this information because it is necessary to provide the service you asked for, to keep the site secure, and, where applicable, because of our legitimate interest in preventing abuse. This site is compliant with the General Data Protection Regulation (GDPR) and other applicable data protection laws.</p>
+
+            <h3>5. Who we share it with</h3>
+            <p>We do not sell your personal information. We share it only with the service providers needed to run the site, such as Railway (our hosting provider), and when required by law. </p>
+
+            <h3>6. Cookies</h3>
+            <p>The site uses a session cookie to keep you logged in. We do not use advertising or tracking cookies. The session cookie is removed when you log out.</p>
+
+            <h3>7. How long we keep it</h3>
+            <ul>
+                <li><strong>Account data</strong> is kept until you delete your account. We do not retain any account data after deletion.</li>
+                <li><strong>IP addresses in login and block records</strong> are kept until you delete your account. However, we may continue to retain your IP address after deletion to prevent abuse.</li>
+            </ul>
+            <p>You can delete your account from the Settings page. Deleting your account removes your stored account record.</p>
+
+            <h3>8. Your rights</h3>
+            <p>Depending on where you live, you may have the right to access, correct, or delete your personal information, to object to or restrict how we use it, and to ask for a copy of it. To use these rights, you can download your data in a JSON file in the <a href="/settings">Settings</a> page.</p>
+
+            <h3>9. Security</h3>
+            <p>Passwords are hashed, API keys are stored only as hashes, and login attempts are rate-limited. No system is completely secure, so we cannot guarantee the security of information sent to or stored on the site.</p>
+
+            <h3>10. Children</h3>
+            <p>The site is not directed at children under 13. Do not create an account if you are under that age.</p>
+
+            <h3>11. Changes to this policy</h3>
+            <p>We may update this policy from time to time. The "Last updated" date at the top shows when it last changed. Continuing to use the site after a change means you accept the updated policy.</p>
+        </div>
+
+        <footer>
+            <p><a href="{{ url_for('index') }}">← Back to App</a></p>
+        </footer>
+    </div>
+</body>
+</html>

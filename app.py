@@ -327,6 +327,10 @@ def api_docs_page():
 def help_page():
     return render_template('help.html')
 
+@app.route('/privacy')
+def privacy_page():
+    return render_template('privacy.html')
+
 from api import auth_bp, admin_bp, cipher_bp, conversion_bp, account_bp, csrf_bp, usage_bp, quest_bp
 
 app.register_blueprint(auth_bp)
