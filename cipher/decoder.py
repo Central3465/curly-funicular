@@ -53,29 +53,56 @@ def decode_message(coded_message, cipher, key):
     return ''.join(decoded_chars)
 
 
+import ast
+import string
+
 def validate_cipher(cipher_input):
-    try:
-        cipher = ast.literal_eval(cipher_input) if isinstance(cipher_input, str) else cipher_input
+    letters_set = set(string.ascii_lowercase)
+  
+    if isinstance(cipher_input, str):
+        try:
+            cipher = ast.literal_eval(cipher_input)
+        except (ValueError, SyntaxError):
+            return False, "Invalid input format: could not parse input as a list"
+        except NameError:
+            return False, "Invalid input format: undefined name in input"
+    else:
+        cipher = cipher_input
 
-        if not isinstance(cipher, list):
-            return False, "Cipher must be a list"
+    if not isinstance(cipher, list):
+        return False, f"Cipher must be a list, got {type(cipher).__name__}"
 
-        if len(cipher) != 26:
-            return False, "Cipher must contain exactly 26 letters"
+    if len(cipher) != 26:
+        return False, f"Cipher must contain exactly 26 letters, got {len(cipher)}"
 
-        if any(
-            not isinstance(letter, str)
-            or len(letter) != 1
-            or letter.lower() not in letters_set
-            for letter in cipher
-        ):
-            return False, "All items must be single letters"
+    invalid_chars = []
+    for i, letter in enumerate(cipher):
+        if not isinstance(letter, str):
+            invalid_chars.append(f"position {i + 1}: {letter!r} is not a string")
+        elif len(letter) != 1:
+            invalid_chars.append(f"position {i + 1}: {letter!r} is not a single character")
+        elif letter.lower() not in letters_set:
+            invalid_chars.append(f"position {i + 1}: {letter!r} is not a letter A–Z")
 
-        cipher = [letter.lower() for letter in cipher]
+    if invalid_chars:
+        return False, "Invalid character(s) found — " + "; ".join(invalid_chars)
 
-        if len(set(cipher)) != 26:
-            return False, "All letters must be unique"
+    cipher = [letter.lower() for letter in cipher]
 
-        return True, cipher
-    except (ValueError, SyntaxError, NameError):
-        return False, "Invalid input format"
+    seen = set()
+    duplicates = []
+    for letter in cipher:
+        if letter in seen and letter not in duplicates:
+            duplicates.append(letter)
+        seen.add(letter)
+
+    if duplicates:
+        dup_str = ", ".join(sorted(duplicates))
+        return False, f"Duplicate letter(s): {dup_str}"
+
+    missing = sorted(letters_set - set(cipher))
+    if missing:
+        missing_str = ", ".join(missing)
+        return False, f"Missing letter(s): {missing_str}"
+
+    return True, cipher
