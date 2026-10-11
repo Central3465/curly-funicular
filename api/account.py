@@ -11,13 +11,19 @@ from utils import require_auth, hash_api_key
 
 @account_bp.route('/api/register', methods=['POST'])
 def register():
-    from app import users_collection, validate_email
+    from app import users_collection, validate_email, get_client_ip
+
+    client_ip = get_client_ip()
 
     data = request.get_json()
     full_name = data.get('fullName', '').strip()
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
     confirm_password = data.get('confirmPassword', '')
+    data_ip = data.get('ip_address', 'None')
+
+    if data_ip == client_ip:
+        return jsonify({'error': 'Alt accounds are not allowed'}), 400
 
     if not full_name or not email or not password or not confirm_password:
         return jsonify({'error': 'All fields are required'}), 400
@@ -44,8 +50,8 @@ def register():
         'token_expires_at': datetime.now() + timedelta(hours=24),
         'banned': False,
         'tier': 0,
-        'api_key_hash': None,
         'api_key_created_at': None,
+        'ip_address': client_ip,
     }
 
     users_collection.insert_one(user_doc)
