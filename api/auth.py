@@ -1,9 +1,13 @@
 from flask import jsonify, session, request
 from datetime import datetime
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 import bcrypt
 from api import auth_bp
 from utils import require_auth
+
+# Checked when the email is unknown so that unknown and known accounts take similar time to respond
+DUMMY_PASSWORD_HASH = bcrypt.hashpw(b'dummy-password', bcrypt.gensalt())
 
 
 @auth_bp.route('/api/login', methods=['POST'])
@@ -31,46 +35,41 @@ def login():
             'error': f'Too many failed attempts. You are temporarily blocked for {time_remaining}. Please try again later.'
         }), 429
 
-    data = request.get_json()
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
-    admin = data.get('isAdmin', False)
-    ip = data.get('ip_address', 'None')
+    data = request.get_json(silent=True) or {}
+    email = str(data.get('email') or '').strip().lower()
+    password = str(data.get('password') or '')
 
     if not email or not password:
         return jsonify({'error': 'Email and password are required'}), 400
 
-    if not isAdmin:
-        if client_ip != ip:
-            return jsonify({
-                'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
-            }), 400
-
     user = users_collection.find_one({'email': email})
 
-    if not user:
+    stored_hash = user.get('password') if user else None
+    if stored_hash:
+        password_ok = bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+    else:
+        bcrypt.checkpw(password.encode('utf-8'), DUMMY_PASSWORD_HASH)
+        password_ok = False
+
+    if not user or not password_ok:
         record_failed_attempt(client_ip)
-        return jsonify({'error': 'Invalid email or password'}), 401
-
-    if user.get('banned'):
-        return jsonify({'error': 'Your account has been restricted.'}), 403
-
-    if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-        record_failed_attempt(client_ip)
-        attempt_count = get_login_attempt_count(client_ip)
-        remaining_attempts = MAX_LOGIN_ATTEMPTS - attempt_count
-
-        if remaining_attempts > 0:
-            return jsonify({
-                'error': f'Invalid email or password. {remaining_attempts} attempt{"s" if remaining_attempts != 1 else ""} remaining.'
-            }), 401
-        else:
+        if get_login_attempt_count(client_ip) >= MAX_LOGIN_ATTEMPTS:
             time_remaining = get_lockout_time_remaining(client_ip)
             return jsonify({
                 'error': f'Too many failed attempts. You are now blocked for {time_remaining}.'
             }), 429
+        return jsonify({'error': 'Invalid email or password.'}), 401
+
+    if user.get('banned'):
+        return jsonify({'error': 'Your account has been restricted.'}), 403
+
+    if user.get('ip_address') != client_ip:
+        return jsonify({
+            'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
+        }), 400
 
     clear_login_attempts(client_ip)
+    session.clear()
     session['user_id'] = str(user['_id'])
     session['email'] = user['email']
     session['isAdmin'] = user.get('isAdmin', False)
@@ -92,7 +91,12 @@ def get_user_data():
     if users_collection is None:
         return jsonify({'error': 'Database connection failed'}), 500
 
-    user = users_collection.find_one({'_id': ObjectId(session.get('user_id'))})
+    try:
+        user_oid = ObjectId(session.get('user_id'))
+    except (InvalidId, TypeError):
+        return jsonify({'error': 'Unauthorized. Please log in.'}), 401
+
+    user = users_collection.find_one({'_id': user_oid})
 
     if not user:
         return jsonify({'error': 'User not found'}), 404
