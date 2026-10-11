@@ -204,6 +204,7 @@
                     <button class="tab-btn converter-tab active" onclick="switchConverterMode('base')">Base Converter</button>
                     <button class="tab-btn converter-tab" onclick="switchConverterMode('ascii-to-base')">ASCII → Base</button>
                     <button class="tab-btn converter-tab" onclick="switchConverterMode('base-to-ascii')">Base → ASCII</button>
+                    <button class="tab-btn converter-tab" onclick="switchConverterMode('base64')">Base64 Converter</button>
                 </div>
 
                 <div id="base-converter-panel" class="converter-panel">
@@ -319,6 +320,28 @@
                         <button id="copy-base-to-ascii-btn" class="btn btn-secondary">Copy to Clipboard</button>
                     </div>
                 </div>
+
+                <div id="base64-converter-panel" class="converter-panel" style="display: none;">
+                    <p style="text-align: center"><strong>This is FREE and will not use your usage!</strong></p>
+                    <div class="form-group">
+                        <label for="base64-input">Text to Encode/Decode:</label>
+                        <textarea
+                            id="base64-input"
+                            class="input-field textarea-field"
+                            placeholder="Enter text to encode or decode in Base64"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <button id="base64-encode-btn" class="btn btn-primary">Encode to Base64</button>
+                    <button id="base64-decode-btn" class="btn btn-secondary">Decode from Base64</button>
+
+                    <div id="base64-result" class="result-container" style="display: none; margin-top: 20px;">
+                        <div class="result-label">Result:</div>
+                        <div id="base64-output" class="decoded-output"></div>
+                        <button id="copy-base64-btn" class="btn btn-secondary">Copy to Clipboard</button>
+                    </div>
+                </div>
             </div>
 
             <div id="error-message" class="error-message" style="display: none;"></div>
@@ -417,6 +440,7 @@
             const basePanel = document.getElementById('base-converter-panel');
             const asciiToBasePanel = document.getElementById('ascii-to-base-panel');
             const baseToAsciiPanel = document.getElementById('base-to-ascii-panel');
+            const base64ConverterPanel = document.getElementById('base64-converter-panel');
             const tabs = document.querySelectorAll('.converter-tab');
 
             tabs.forEach(tab => tab.classList.remove('active'));
@@ -425,17 +449,26 @@
                 basePanel.style.display = 'block';
                 asciiToBasePanel.style.display = 'none';
                 baseToAsciiPanel.style.display = 'none';
+                base64ConverterPanel.style.display = 'none';
                 tabs[0].classList.add('active');
             } else if (mode === 'ascii-to-base') {
                 basePanel.style.display = 'none';
                 asciiToBasePanel.style.display = 'block';
                 baseToAsciiPanel.style.display = 'none';
+                base64ConverterPanel.style.display = 'none';
                 tabs[1].classList.add('active');
             } else if (mode === 'base-to-ascii') {
                 basePanel.style.display = 'none';
                 asciiToBasePanel.style.display = 'none';
                 baseToAsciiPanel.style.display = 'block';
+                base64ConverterPanel.style.display = 'none';
                 tabs[2].classList.add('active');
+            } else if (mode === 'base64') {
+                basePanel.style.display = 'none';
+                asciiToBasePanel.style.display = 'none';
+                baseToAsciiPanel.style.display = 'none';
+                base64ConverterPanel.style.display = 'block';
+                tabs[3].classList.add('active');
             }
         }
 
@@ -775,6 +808,42 @@
             }).catch(err => {
                 showError('Failed to copy: ' + err.message);
             });
+        });
+
+        document.getElementById('base64-encode-btn').addEventListener('click', function() {
+            const text = document.getElementById('base64-input').value;
+
+            if (!text) {
+                showError('Please enter text to encode');
+                return;
+            }
+
+            try {
+                const encoded = btoa(unescape(encodeURIComponent(text)));
+                document.getElementById('base64-output').textContent = encoded;
+                document.getElementById('base64-result').style.display = 'block';
+                showSuccess('Text encoded to Base64 successfully!');
+            } catch (error) {
+                showError('Error encoding to Base64: ' + error.message);
+            }
+        });
+
+        document.getElementById('base64-decode-btn').addEventListener('click', function() {
+            const text = document.getElementById('base64-input').value;
+
+            if (!text) {
+                showError('Please enter text to decode');
+                return;
+            }
+
+            try {
+                const decoded = decodeURIComponent(escape(atob(text)));
+                document.getElementById('base64-output').textContent = decoded;
+                document.getElementById('base64-result').style.display = 'block';
+                showSuccess('Text decoded from Base64 successfully!');
+            } catch (error) {
+                showError('Error decoding from Base64: ' + error.message);
+            }
         });
 
         document.getElementById('base-to-ascii-btn').addEventListener('click', async function() {

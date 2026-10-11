@@ -91,3 +91,30 @@ def base_to_ascii_endpoint():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@conversion_bp.route('/api/base64', methods=['POST'])
+@require_auth_or_api_key
+@track_usage
+def base64_endpoint():
+    can_proceed, error_msg = check_usage_limits(get_authenticated_user_id())
+    if not can_proceed:
+        return jsonify({'error': error_msg}), 429
+
+    data = request.get_json()
+    text = data.get('text', '')
+    action = data.get('action')
+
+    if not text:
+        return jsonify({'error': 'Text cannot be empty'}), 400
+
+    try:
+        if action == 'encode':
+            result = text.encode('utf-8').hex()
+        elif action == 'decode':
+            result = bytes.fromhex(text).decode('utf-8')
+        else:
+            return jsonify({'error': 'Invalid action. Must be "encode" or "decode".'}), 400
+
+        return jsonify({'result': result, 'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
