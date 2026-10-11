@@ -31,19 +31,19 @@ def register():
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
     confirm_password = data.get('confirmPassword', '')
-    birthday = data.get('birthday', '')
+    #birthday = data.get('birthday', '')
 
-    user = users_collection.find_one({'email': email})
-    if user and user.get('ip_address') != client_ip:
-        return jsonify({
-            'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
-        }), 400
+    #user = users_collection.find_one({'email': email})
+    #if user and user.get('ip_address') != client_ip:
+    #    return jsonify({
+    #        'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
+    #    }), 400
 
-    try:
-        if not is_over_13(birthday):
-            return jsonify({"error": "You must be 13 or older to register in compliance with our privacy policy."}), 403
-    except ValueError:
-        return jsonify({"error": "Invalid date."}), 400
+    #try:
+    #    if not is_over_13(birthday):
+    #        return jsonify({"error": "You must be 13 or older to register in compliance with our privacy policy."}), 403
+    #except ValueError:
+    #    return jsonify({"error": "Invalid date."}), 400
 
     if not full_name or not email or not password or not confirm_password:
         return jsonify({'error': 'All fields are required'}), 400
