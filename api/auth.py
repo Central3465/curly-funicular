@@ -63,10 +63,10 @@ def login():
     if user.get('banned'):
         return jsonify({'error': 'Your account has been restricted.'}), 403
 
-    if user.get('ip_address') != client_ip:
-        return jsonify({
-            'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
-        }), 400
+    #if user.get('ip_address') != client_ip:
+    #    return jsonify({
+    #        'error': 'IP address mismatch. Please use the same IP address you registered with. This is a security measure to prevent unauthorized access.'
+    #    }), 400
 
     clear_login_attempts(client_ip)
     session.clear()
