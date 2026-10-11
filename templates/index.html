@@ -910,7 +910,7 @@
 
         async function updateQuestXP() {
             try {
-                const response = await fetch('/api/get-quests', { headers: getHeaders() });
+                const response = await fetch('/api/check-rankup', { headers: getHeaders() });
 
                 if (response.status === 401) {
                     showAuthWarning();

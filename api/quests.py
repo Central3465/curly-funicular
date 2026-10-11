@@ -1,8 +1,14 @@
 from flask import jsonify, session
 from api import quest_bp
-from utils import require_auth, get_usage_limits
+from utils import require_auth, get_usage_limits, TIER_DEFAULT, TIER_TRUSTED, TIER_SUPERUSER
 from datetime import datetime
 from bson.objectid import ObjectId
+
+# (rank name, XP required, tier granted), lowest to highest
+RANKS = [
+    ('Trusted', 500, TIER_TRUSTED),
+    ('Superuser', 1000, TIER_SUPERUSER),
+]
 
 @quest_bp.route('/api/get-quests', methods=['GET'])
 @require_auth
@@ -41,14 +47,18 @@ def check_rankup():
     
     if completed_quests == 0:
         return jsonify({'rankup': False, 'message': 'No quests completed yet.'})
-    
-    ranks = {
-        "Trusted": 500,
-        "Superuser": 1000
-    }
 
-    for a, b in ranks.items():
-        if completed_quests >= b and user.get('tier') < 1:
-            return jsonify({'rankup': True, 'new_rank': {user.get('tier') + 1}, 'message': f'You have the required amount of XP {completed_quests} and is eligible to rank up to {a}.'})
+    current_tier = user.get('tier', TIER_DEFAULT)
 
-    return jsonify({'rankup': False, 'message': f'You have {completed_quests} XP. You need more XP to rank up.'})        
+    # the next rank is the lowest one above the user's current tier
+    next_rank = next((rank for rank in RANKS if rank[2] > current_tier), None)
+
+    if next_rank is None:
+        return jsonify({'rankup': False, 'message': 'You are already at the highest rank.'})
+
+    name, xp_required, _ = next_rank
+
+    if completed_quests >= xp_required:
+        return jsonify({'rankup': True, 'new_rank': name, 'message': f'You have {completed_quests} XP and are eligible to rank up to {name}.'})
+
+    return jsonify({'rankup': False, 'message': f'You have {completed_quests} XP. You need {xp_required - completed_quests} more XP to rank up to {name}.'})
